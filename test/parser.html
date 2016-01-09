@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="../js/parser.js"></script>
+</head>
+<body>
+
+</body>
+<script type="text/javascript">
+	var p = new Parser();
+	p.parseCode([
+	"; filament_diameter = 3",
+	"; extrusion_multiplier = 1",
+	"; perimeters extrusion width = 0.53mm",
+	"; infill extrusion width = 0.53mm",
+	"; first layer extrusion width = 0.80mm",
+	"",
+	"M104 S200 ; set temperature",
+	"G28 ; home all axes",
+	"M109 S200 ; wait for temperature to be reached",
+	"G90 ; use absolute coordinates",
+	"G21 ; set units to millimeters",
+	"G92 E0",
+	"M82 ; use absolute distances for extrusion",
+	"G1 F+1800.000 E-1.00000",
+	"G92 E0",
+	"G1 X75.140 Y91.011 F7800.000",
+	"G1 F1800.000 E1.00000",
+	"G1 X75.981 Y90.276 F540.000 E1.04646",
+	"G1 X76.883 Y89.620 E1.09291",
+	"G1 X77.841 Y89.048 E1.13937",
+	"G1 X78.847 Y88.564 E1.18583",
+	"G1 X79.295 Y88.396 E1.20575",
+	"G1 X79.295 Y88.396 E1.20575",
+	"X42.5 Y80.01 E-01",
+	"G1 X79.892 Y88.172 E1.23229"]);
+	console.log(p.glines);
+</script>
+</html>
