@@ -1,0 +1,124 @@
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="css/fontIcon.css">
+	<link rel="stylesheet" type="text/css" href="css/ui.css">
+	<script id="shader-vs" type="x-shader/x-vertex">
+		attribute vec3 position;
+		// Vertical distance from horizontal axis. Must be >255
+		varying float vDist;
+		uniform float maxL;
+		uniform float maxR;
+		void main() 
+		{
+			// Z = horizontal
+			// X = vertical
+		    float z=position.z/maxL*2.0-1.0;
+		    float x=position.x/maxR*2.0-1.0;
+		    gl_Position = vec4(z,1.0,x, 1.0 );
+		    vDist = position.x;
+		}
+	</script>
+	<script id="shader-fs" type="x-shader/x-fragment">
+		precision highp float;	
+		varying float vDist;
+
+		void main(void) 
+		{
+			// The color value will be used later to get the value of X axis
+			// If vDist has the folowing format AAA.BBCCDDDDD
+			// R channel = 0<=AAA<=255 
+			// G channel = 0<=BB<=99
+			// B channel = 0<=CC.DDDD<100
+			// vDist value will be R+G/100+B/10000
+			// if (vDist<0.0)
+			// 	gl_FragColor = vec4(0.0,0.0,0.0,1.0);
+			// else
+			{
+				float r=floor(vDist);
+				float g=(vDist-r)*100.0;
+				float b=g*100.0-floor(g)*100.0;
+				g=floor(g);
+				gl_FragColor = vec4(r/255.0,g/255.0,b/255.0,1.0);
+				//gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+			}
+		}
+	</script>
+	<script src="js/ace/ace.js"></script>
+	<script src="js/three.min.js"></script>
+	<script src="js/OrbitControls.js"></script>
+	<script src="js/lz-string.min.js"></script>
+	<script src="js/storage.js"></script>
+	<script src="js/ui.js"></script>
+	<script src="js/parser.js"></script>
+	<script src="js/interpreter.js"></script>
+	<script src="js/renderer3D.js"></script>
+	<script src="js/lathe.js"></script>
+	<script src="js/mill.js"></script>
+	<script src="js/printer.js"></script>
+	<script src="js/editor.js"></script>
+
+	<script src="js/main.js"></script>
+	<script type="text/javascript">
+	window.addEventListener("load", (function () 
+	{
+		mainInit();
+	}),true);
+</script>
+</head>
+<body>
+	<header id="mainmenu">
+		<nav>
+			<ul>
+				<li><div><span title="File" class="icon icon-folder-open"></span>File</div>
+					<ul>
+						<li><div title="New File">New</div></li>
+						<li><div title="Open File">Open</div></li>
+						<li><div title="Delete File">Delete</div></li>
+						<li><div title="Edit File">Edit</div></li>
+						<li><div title="Import File">Import</div></li>
+						<li><div title="Export File">Export</div></li>
+						<li><div title="Demo File">Demos</div></li>
+					</ul>
+				</li>
+				<li><div><span title="Editor" class="icon icon-pencil"></span>Editor</div></li>
+				<li><div><span title="Simulator" class="icon icon-play3"></span>Simulator</div></li>
+				<li><div><span title="Machine" class="icon icon-cogs"></span>Machine</div>
+					<ul>
+						<li><div title="Open Machine">Open Machine</div></li>
+						<li><div title="Machine Settings">Machine Settings</div></li>
+					</ul>
+				</li>
+				<li><div><span title="Workpiece" class="icon icon-codepen"></span>Workpiece</div>
+					<ul>
+						<li><div title="Workpiece dimensions">Dimensions</div></li>
+						<li><div title="Workpiece material">Material</div></li>
+					</ul>
+				</li>
+				<li><div><span title="Help" class="icon icon-question"></span>Help</div>
+					<ul>
+						<li><div title="Lisence" >Lisence</div></li>
+						<li><div title="About" >About</div></li>
+						<li><div title="Documentation" >Documentation</div></li>
+						<li><div title="Source code" >Source code</div></li>
+					</ul>
+				</li>
+			</ul>
+		</nav>
+	</header>
+	<div id="editor">
+	</div>
+	<div id="maincanvas">
+	</div>
+	<div id="footermenu">
+		<span title="Run" class="icon-play3"></span>
+		<span title="Pause" class="icon-pause2"></span>
+		<span title="Stop" class="icon-stop2"></span>
+		<span title="Step" class="icon-forward3"></span>
+		<span title="Simulate 2D" >2D</span>
+		<span title="Simulate 3D" >3D</span>
+		<div id="mousecoordinate">X: 0.00 Y: 0.00 Z: 0.00</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,278 @@
+* {
+	margin:0;
+	padding:0;
+}
+body
+{
+	overflow: hidden;
+}
+/*============================*/
+/*=====     HEADER        ====*/
+/*============================*/
+header 
+{
+	margin-top:0px;
+    width: 100%;
+    left: 0px;
+    right: 450px;
+    overflow: hidden;
+    height: 45px;
+    position: relative;
+    margin: 0px;
+    z-index: 30;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+header:hover
+{
+	height: 100px;
+}
+nav 
+{
+    top:-20px;
+    position: absolute;
+    left:0;
+    right:450;
+	margin:20px auto;
+	/*max-width:800px;*/
+	/*width:90%;*/
+}
+nav ul 
+{
+	list-style:none;
+}
+nav > ul 
+{
+	/*display:table;*/
+	width:100%;
+	background:#272822;
+	position:relative;
+}
+nav > ul li 
+{
+	display:table-cell;
+}
+/*Sub-menu*/
+nav > ul > li:hover > ul 
+{
+	display:block;
+	height:100%;
+}
+nav > ul > li > ul 
+{
+	display:block;
+	position:absolute;
+	background:#4e4c46;
+	left:0;
+	right:0;
+	overflow:hidden;
+	height:0%;
+	-webkit-transition: all .3s ease;
+	-moz-transition: all .3s ease;
+	-ms-transition: all .3s ease;
+	-o-transition: all .3s ease;
+	transition: all .3s ease;
+}
+nav > ul li div 
+{
+	color: #dfdbd2;
+	display:block;
+	line-height:15px;
+	padding:15px;
+	position: relative;
+	text-align:center;
+	cursor: hand;
+	-webkit-transition: all .3s ease;
+	-moz-transition: all .3s ease;
+	-ms-transition: all .3s ease;
+	-o-transition: all .3s ease;
+	transition: all .3s ease;
+}
+nav > ul > li > ul > li div:hover 
+{
+	background:#272822;
+}
+nav > ul > li > div span 
+{
+	background:#d14826;
+	display:block;
+	height:100%;
+	width:100%;
+	left:0;
+	position:absolute;
+	top:-42px;
+	-webkit-transition: all .3s ease;
+	-moz-transition: all .3s ease;
+	-ms-transition: all .3s ease;
+	-o-transition: all .3s ease;
+	transition: all .3s ease;
+}
+nav > ul > li > div > .icon 
+{
+	display:block;
+	line-height:45px;
+}
+nav > ul > li > div:hover > span 
+{
+	top:0;
+}
+/*============================*/
+/*=====     editor        ====*/
+/*============================*/
+#editor
+{
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	width: 450px;
+	height: 100%;
+	z-index: 40;
+	/*background: #000;*/
+}
+/*============================*/
+/*=====  main canvas      ====*/
+/*============================*/
+#maincanvas
+{
+	position: absolute;
+	top: 0px;
+	right: 450px;
+	left: 0px;
+	bottom: 40px;
+	background: #f0f0f0;
+	z-index: 10;
+}
+#maincanvas>canvas
+{
+	height: 50%;
+}
+/*============================*/
+/*=====   footer menu     ====*/
+/*============================*/
+#footermenu
+{
+	position: absolute;
+	right: 450px;
+	left: 0px;
+	bottom: 0px;
+	height: 20px;
+	background:#272822;
+	padding: 10px;
+	z-index: 20;
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+#footermenu > span
+{
+	color: #dfdbd2;
+	padding-left: 5px;
+	font-size: 15px;
+}
+#footermenu > span:hover
+{
+	color:#d14826;
+	cursor: pointer;
+}
+
+#mousecoordinate
+{
+	color:#d14826;
+	float: right;
+	cursor: auto;
+}
+/*============================*/
+/*=====   Dialog box      ====*/
+/*============================*/
+.dialogBox
+{
+	position: absolute;
+	width: 400px;
+	/*margin: 0px 450px auto;*/
+	background: #2F3129;
+	display: block;
+	color:#dfdbd2;
+	-webkit-box-shadow: -5px 7px 29px 3px rgba(0,0,0,0.68);
+	-moz-box-shadow: -5px 7px 29px 3px rgba(0,0,0,0.68);
+	box-shadow: -5px 7px 29px 3px rgba(0,0,0,0.68);
+	z-index: 50;
+	top: 200px;
+ }
+.dialogBoxH
+{
+	cursor:move;
+	padding: 10px;
+	height: auto;
+	background: #2F3129;
+	font-size: 18px;
+	z-index: 50;
+}
+.dialogBoxH >span
+{
+	float: right;
+	cursor: pointer;
+}
+.dialogBoxB
+{
+  padding: 20px;
+  max-height: 500px;
+  overflow: auto;
+  overflow-x: hidden;
+  background: #4e4c46;
+  display: block;
+}
+.dialogBoxB>label
+{
+    display: block;
+    margin: 5px 0px 5px 0px;
+}
+.dialogBoxB>input[type=text]
+{
+  width: 80%;
+  
+}
+.dialogBoxB>input[type=radio]
+{
+  display: inline;
+  margin: 5px 5px 5px 15px;
+}
+
+.dialogBoxB>button
+{
+  display: block;
+  margin-top: 10px;
+  height: 30px;
+  bottom: 0px;
+  width: 100px;
+  background: #d14826;
+  color: #fff;
+  border: 0px;
+}
+.dialogBoxRow
+{
+	position: relative;
+	display: table;
+}
+.dialogBoxIcons
+{
+  margin: 20px;
+  position: relative;
+  float: left;
+  width: 80px;
+  display: block;
+  text-align: center;
+  cursor: pointer;
+}
+.dialogBoxIcons>span
+{
+    font-size: 50px;
+    display: block;
+    margin: 0px auto 10px auto;
+}
