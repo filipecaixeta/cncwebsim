@@ -9,36 +9,30 @@
 function Parser () 
 {
   this.glines = [];
+  this.commands = [];
   this.activeCommand = null;
+  this.feedMode = null;
   GLine.prototype.parser = this;
 }
+// Returns the next command from the list
+Parser.prototype.getCommand = function() 
+{
+  return this.commands.shift();
+};
 // Takes a line as a string and append a GLine to the array this.glines.
 // If the line number is given the function will parse the line again.
 // If the lineNumber is a null value the function will take as the last line
-Parser.prototype.parseLine = function(line,lineNumber) 
+Parser.prototype.parseLine = function(line) 
 {
-  if (lineNumber === null || lineNumber > this.glines.length)
-  {
     var gline = new GLine(line);
     gline.lineNumber = this.glines.length;
     gline.processLine();
-    this.glines.push(gline);
-  }
-  else
-  {
-    if (lineNumber>0)
-      this.activeCommand=this.glines[lineNumber-1].activeCommand;
-    this.glines[lineNumber].rawLine=line;
-    for (var i=lineNumber; i<this.glines.length; i++)
-    {
-      this.glines[i].commands=[];
-      this.glines[i].processLine();
-    }
-  }
+    this.glines.push(gline);  
 };
-// Takes an array of strings and parse all of them.
+// Takes a code, split the lines and parse
 Parser.prototype.parseCode = function(code) 
 {
+  code=code.split("\n");
   for (var i = 0; i < code.length; i++) 
   {
     this.parseLine(code[i],null);
@@ -52,14 +46,13 @@ Parser.prototype.parseCode = function(code)
 function GLine (line) 
 {
   this.coments = [];
-  this.commands  = [];
   this.lineNumber = 0;
   this.rawLine = line;
   this.activeCommand = null;
 }
 // A raw line is processed by removing comments, spitting the line into words and numbers
 // and separating and sorting all the commands in a line
-// Final result will be in this.commands in the right order to be processed by the simulator.
+// Final result will be in Parser.commands in the right order to be processed by the simulator.
 GLine.prototype.processLine = function() 
 {
   var line = this.removeComment(this.rawLine);
@@ -106,6 +99,13 @@ GLine.prototype.splitLine = function(line)
         re.lastIndex++;
     }
     m[2]=parseFloat(m[2]);
+    if (m[1]=='g' || m[1]=='m')
+    {
+      if (m[2]%1==0)
+        m[2]=Math.round(m[2]);
+      else
+        m[2]=Math.round(m[2]*10);
+    }
     result.push([m[1],m[2]]);
   }
   return result;
@@ -137,6 +137,7 @@ GLine.prototype.splitLine = function(line)
   // 21.    perform motion (G0 to G3, G80 to G89)
   // 21.    X,Y,Z,R,I,J,K
   // 22.    stop (M0, M1, M2, M30, M60).
+  // 23.    Command not implemented
 // Every command is an object of type Command
 // If the G function takes parameters they will be inside the object Command
 // A G code for motion (G0,G1,G2,G3) will only be added to the commands list if it has axis words
@@ -177,7 +178,7 @@ GLine.prototype.separeteCommands = function(line)
     }
   };
   // Get all the commands
-  ht=Array(23);
+  ht=Array(24);
   for (var i = 0; i < commandsUnsorted.length; i++) 
   {
     var elem=commandsUnsorted[i];
@@ -189,11 +190,12 @@ GLine.prototype.separeteCommands = function(line)
       case 'g':
         switch (elem[1])
         {
-          case 93.0: case 94.0:
+          case 93: case 94:
+            this.parser.feedMode = elem[1];
             c.mgroup=5;
             pos=0;
             break;
-          case 4.0:
+          case 4:
             if (!this.checkParameter(parametersList,c,'p'))
               throw new ErrorParser(this.lineNumber,"Wrong G4. Missing word P",this.rawLine);
             if (c.param['p']<0)
@@ -201,55 +203,55 @@ GLine.prototype.separeteCommands = function(line)
             c.mgroup=0;
             pos=8;
             break;
-          case 17.0: case 18.0: case 19.0:
+          case 17: case 18: case 19:
             c.mgroup=2;
             pos=9;
             break;
-          case 20.0: case 21.0:
+          case 20: case 21:
             c.mgroup=6;
             pos=10;
             break;
-          case 41.0: case 42.0:
+          case 41: case 42:
             if (!this.checkParameter(parametersList,c,'d'))
-              throw new ErrorParser(this.lineNumber,"Wrong G"+Math.round(elem[1])+". Missing word D",this.rawLine);
-          case 40.0: 
+              throw new ErrorParser(this.lineNumber,"Wrong G"+elem[1]+". Missing word D",this.rawLine);
+          case 40: 
             c.mgroup=7;
             pos=11;
             break;
-          case 43.0:
+          case 43:
             if (!this.checkParameter(parametersList,c,'h'))
               throw new ErrorParser(this.lineNumber,"Wrong G43. Missing word H",this.rawLine);
-          case 49.0:
+          case 49:
             c.mgroup=8;
             pos=12;
             break;
-          case 54.0: case 55.0: case 56.0: case 57.0: case 58.0: case 59.0:
+          case 54: case 55: case 56: case 57: case 58: case 59:
             c.mgroup=12;
             pos=13;
             break;
-          case 61.0: case 64.0:
+          case 61: case 64:
             c.mgroup=13;
             pos=14;
             break;
-          case 90.0: case 91.0:
+          case 90: case 91:
             c.mgroup=3;
             pos=15;
             break;
-          case 98.0: case 99.0:
+          case 98: case 99:
             c.mgroup=10;
             pos=16;
             break;
-          case 30.0:
+          case 30:
             this.checkParameter(parametersList,c,'p');
             this.checkParameter(parametersList,c,'h');
-          case 28.0:
+          case 28:
             this.checkParameter(parametersList,c,'x');
             this.checkParameter(parametersList,c,'y');
             this.checkParameter(parametersList,c,'z');
             c.mgroup=0;
             pos=17;
             break;
-          case 10.0:
+          case 10:
             if (this.checkParameter(parametersList,c,'l'))
             {
               if (!this.checkParameter(parametersList,c,'p'))
@@ -258,7 +260,7 @@ GLine.prototype.separeteCommands = function(line)
               this.checkParameter(parametersList,c,'y');
               this.checkParameter(parametersList,c,'z');
               this.checkParameter(parametersList,c,'r');
-              if (c.param['l']==1.0 || c.param['l']==10.0 || c.param['l']==11.0)
+              if (c.param['l']==1 || c.param['l']==10 || c.param['l']==11)
               {
                 this.checkParameter(parametersList,c,'i');
                 this.checkParameter(parametersList,c,'j');
@@ -270,7 +272,7 @@ GLine.prototype.separeteCommands = function(line)
             c.mgroup=0;
             pos=18;
             break;
-          case 92.0:
+          case 92:
             var temp = false;
             temp = this.checkParameter(parametersList,c,'x')||temp;
             temp = this.checkParameter(parametersList,c,'y')||temp;
@@ -281,18 +283,19 @@ GLine.prototype.separeteCommands = function(line)
             c.mgroup=0;
             pos=19;
             break;
-          case 53.0:
+          case 53:
             c.mgroup=0;
             pos=20;
             break;
-          case 0.0: case 1.0: case 2.0: case 3.0:
+          case 0: case 1: case 2: case 3:
             this.parser.activeCommand=c.number;
             c.mgroup=1;
             pos=21;
             break;
           default:
-            this.number=-1;
+            c.number=9999;
             param=elem;
+            pos=23;
             break;
         }
         break;
@@ -300,41 +303,46 @@ GLine.prototype.separeteCommands = function(line)
       case 'm':
         switch (elem[1])
         {
-          case 104.0:
+          case 104:
             pos=3;
             break;
-          case 6.0:
+          case 6:
             c.mgroup=6;
             pos=4;
             break;
-          case 3.0: case 4.0: case 5.0:
+          case 3: case 4: case 5:
             c.mgroup=7;
             pos=5;
             break;
-          case 7.0: case 8.0: case 9.0: case 109.0:
+          case 7: case 8: case 9: case 109:
             c.mgroup=8;
             pos=6;
             break;
-          case 48.0: case 49.0: case 82.0: case 83.0:
+          case 48: case 49: case 82: case 83:
             c.mgroup=9;
             pos=7;
             break;
-          case 0.0: case 1.0: case 2.0: case 30.0: case 60.0:
+          case 0: case 1: case 2: case 30: case 60:
             c.mgroup=4;
             pos=22;
             break;
           default:
-            this.number=-1;
+            c.number=9999;
             param=elem;
+            pos=23;
             break;
         }
         break;
       // Feed rate
       case 'f':
+        c.number=0;
+        c.param['f']=elem[1];
         pos=1;
         break;
       // Spindle speed or temperature
       case 's':
+        c.number=0;
+        c.param['s']=elem[1];
         pos=2;
         break;
     }
@@ -346,11 +354,12 @@ GLine.prototype.separeteCommands = function(line)
     var temp = false;
     var temp2 = true;
     var c = new Command();
-    
     temp = this.checkParameter(parametersList,c,'x')||temp;
     temp = this.checkParameter(parametersList,c,'y')||temp;
     temp = this.checkParameter(parametersList,c,'z')||temp;
-    if (this.parser.activeCommand==2.0 || this.parser.activeCommand==3.0)
+    this.checkParameter(parametersList,c,'a');
+    this.checkParameter(parametersList,c,'e');
+    if (this.parser.activeCommand==2 || this.parser.activeCommand==3)
     {
       temp2 = false;
       temp2 = this.checkParameter(parametersList,c,'r')||temp2;
@@ -361,8 +370,11 @@ GLine.prototype.separeteCommands = function(line)
     if (temp==true && temp2==true)
     {
       c.ctype = 'g';
-      c.mgroup = 1.0;
+      c.mgroup = 1;
       c.number = this.parser.activeCommand;
+      // If G93 is active every line with G1,G2,G3 should have the F word 
+      if (this.parser.feedMode==93 && c.number!=0 && ht[1]===undefined)
+        throw new ErrorParser(this.lineNumber,"G93 is active but F word is missing",this.rawLine);
       ht[21]=c;
     }
     else
@@ -372,7 +384,10 @@ GLine.prototype.separeteCommands = function(line)
   for (var i = 0; i < ht.length; i++) 
   {
     if (ht[i]!==undefined)
-      this.commands.push(ht[i]);
+    {
+      ht[i].line = this;
+      this.parser.commands.push(ht[i]);
+    }
   }
 };
 // Check whether the parameter exists.
@@ -381,13 +396,18 @@ GLine.prototype.checkParameter = function(parametersList,c,parm)
 {
   if (parm in parametersList)
   {
-    c.param[parm]=parametersList[parm];
+    if (/x|y|z/.test(parm))
+      c.param.xyz[parm]=parametersList[parm];
+    else if (/i|j|k/.test(parm))
+      c.param.ijk[parm]=parametersList[parm];
+    else
+      c.param[parm]=parametersList[parm];
     delete parametersList[parm];
     return true;
   }
   else
     return false;
-}
+};
 // A Command can be any function that changes the state of the machine
 // To be more specific a command is the smallest instruction that will be passed to the simulator.
 // It contains the type and other data like parameters.
@@ -400,7 +420,9 @@ function Command ()
   // g or m number
   this.number = null;
   // Parameters
-  this.param = {}; 
+  this.param = {ijk:{},xyz:{}}; 
+  // A pointer to the line
+  this.line = null;
 }
 // Creates an error object for the parser
 function ErrorParser (line,message,data) 
@@ -408,7 +430,7 @@ function ErrorParser (line,message,data)
   this.line = line;
   this.message = message;
   this.data = data;
-}
+};
 // Returns a string form of the error.
 ErrorParser.prototype.toString = function ()
 {
