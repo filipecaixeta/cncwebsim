@@ -59,7 +59,7 @@ function init3DRenderer()
 	scene3d.add( ambient );
 
 	// Skybox
-	var r = "../images/";
+	var r = "../cncwebsim/images/";
 	var urls = [ r + "xpos.jpg", r + "xneg.jpg",
 				 r + "ypos.jpg", r + "yneg.jpg",
 				 r + "zpos.jpg", r + "zneg.jpg" ];
