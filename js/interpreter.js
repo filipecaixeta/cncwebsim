@@ -1,100 +1,114 @@
-function Interpreter (machine) 
-{
-	// Mill - Mill, Lathe - Lathe, 3D Printer - Printer
-	this.machineType = machine.machineType;
-	this.modal = 
+/**
+ * @author Filipe Caixeta / http://filipecaixeta.com.br/
+ */
+
+CWS.Interpreter = function (machine) 
 	{
-		motion:0,                  // {G0,G1,G2,G3,G38.2,G80}
-		feed_rate_mode:94,         // {G93,G94}
-		units:1.0,                 // {G20,G21}  1in = 25.4mm
-		distance:90,               // {G90,G91}
-		plane_select:0,            // {G17,G18,G19}
-		tool_length:0,             // {G43.1,G49}
-		coord_select:0,            // {G54,G55,G56,G57,G58,G59}
-		program_flow:0,            // {M0,M1,M2,M30}
-		coolant:0,                 // {M7,M8,M9}
-		spindle:0,                 // {M3,M4,M5}
-		cutter_comp:40			   // {G40,G41,G42}
-	};
-	this.settings = 
-	{
-		g0_speed:10,			   // Speed for G0
-		spindle_speed:0,           // RPM
-		feed_rate:null,            // Millimeters/min
-		feed_rate93:0,             // 1/F min
-		tool:0,                    // Tracks tool number.
-		line_number:0,             // Last line number sent
-		machine_postion_g53:false, // If true the next modal command will use absolute position and set to false again
-		coord_system:null,         // Current work coordinate system (G54+). Stores offset from absolute machine
-		                           // position in mm. Loaded from EEPROM when called.  
-		coord_offset:{x:0,y:0,z:0},// Retains the G92 coordinate offset (work coordinates) relative to
-		                           // machine zero in mm. Non-persistent. Cleared upon reset and boot.    
-		tool_length_offset:0,      // Tracks tool length offset value when enabled.
+		// Mill - Mill, Lathe - Lathe, 3D Printer - Printer
+		this.machineType = machine.mtype;
+		this.modal = 
+		{
+			motion:0,                  // {G0,G1,G2,G3,G38.2,G80}
+			feed_rate_mode:94,         // {G93,G94}
+			units:1.0,                 // {G20,G21}  1in = 25.4mm
+			distance:90,               // {G90,G91}
+			plane_select:0,            // {G17,G18,G19}
+			tool_length:0,             // {G43.1,G49}
+			coord_select:0,            // {G54,G55,G56,G57,G58,G59}
+			program_flow:0,            // {M0,M1,M2,M30}
+			coolant:0,                 // {M7,M8,M9}
+			spindle:0,                 // {M3,M4,M5}
+			cutter_comp:40			   // {G40,G41,G42}
+		};
+		this.settings = 
+		{
+			g0_speed:10,			   // Speed for G0
+			spindle_speed:0,           // RPM
+			feed_rate:null,            // Millimeters/min
+			feed_rate93:0,             // 1/F min
+			tool:0,                    // Tracks tool number.
+			line_number:0,             // Last line number sent
+			machine_postion_g53:false, // If true the next modal command will use absolute position and set to false again
+			coord_system:null,         // Current work coordinate system (G54+). Stores offset from absolute machine
+			                           // position in mm. Loaded from EEPROM when called.  
+			coord_offset:{x:0,y:0,z:0},// Retains the G92 coordinate offset (work coordinates) relative to
+			                           // machine zero in mm. Non-persistent. Cleared upon reset and boot.    
+			tool_length_offset:0,      // Tracks tool length offset value when enabled.
 
-		sys_abort:false,
-		sys_rt_exec_state:0,
-		sys_rt_exec_alarm:0,
-		sys_suspend:false,
-		pos28:machine.home1,
-		pos30:machine.home2,
-	};
-	this.toolTable = {};
-	this.coordinateSystemTable = 
-	[								// P0 active system, P1-P6 = G54-G59
-		{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},
-		{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0}
-	];
-	this.position = this.settings.pos28;  // Where the interpreter considers the tool to be at this point in the code
+			sys_abort:false,
+			sys_rt_exec_state:0,
+			sys_rt_exec_alarm:0,
+			sys_suspend:false,
+			pos28:machine.home1,
+			pos30:machine.home2,
+		};
+		this.toolTable = {};
+		this.coordinateSystemTable = 
+		[								// P0 active system, P1-P6 = G54-G59
+			{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},
+			{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0}
+		];
+		this.position = this.settings.pos28;  // Where the interpreter considers the tool to be at this point in the code
 
-	this.outputCommands = []; 		// {time:t,comand:cdata}
+		this.outputCommands = []; 		// {time:t,comand:cdata}
 
-	// Coordinate system is P0
-	this.settings.coord_system=this.coordinateSystemTable[0];
+		// Coordinate system is P0
+		this.settings.coord_system=this.coordinateSystemTable[0];
 
-	this.N_ARC_CORRECTION = 0;
+		this.N_ARC_CORRECTION = 0;
 
-	this.invertRadius = 1;
-	if (this.machineType=="Lathe")
-	{
-		this.invertRadius = -1;		
-		this.g18({number:18});
+		this.invertRadius = 1;
+		if (this.machineType=="Lathe")
+		{
+			this.invertRadius = -1;		
+			this.g18({number:18});
+		}
+		else if (this.machineType=="Mill")
+		{
+			this.g17({number:17});
+		}
+		else if (this.machineType=="3D Printer")
+		{
+			this.position.z=0;
+			this.g17({number:17});
+		}
+		this.stopRunning = false;
 	}
-	else if (this.machineType=="Mill" || this.machineType=="Printer")
-		this.g17({number:17});
-	this.stopRunning = false;
-}
-Interpreter.prototype.runCommand = function (cmd) 
-{
-	if (!this.stopRunning)
-		return this[cmd.ctype+cmd.number](cmd);
-};
-Interpreter.prototype.getCommand = function () 
-{
-	return this.outputCommands.shift();
-};
+
+CWS.Interpreter.prototype.runCommand = function (cmd) 
+	{
+		if (!this.stopRunning)
+			return this[cmd.ctype+cmd.number](cmd);
+	};
+
+CWS.Interpreter.prototype.getCommand = function () 
+	{
+		return this.outputCommands.shift();
+	};
 // Create a new entry in the tool table
-Interpreter.prototype.createTooTableEntry = function (tnumber) 
-{
-	// tnumber	Tool number
-	// x,y,z 	Axis offset
-	// R 		Radius of tool
-	// I 		Front angle (lathe)
-	// J 		Back angle (lathe)
-	// Q 		Orientation (lathe)
-	this.toolTable[tnumber]={x:0,y:0,z:0,i:0,j:0,q:0,r:0};
-};
+CWS.Interpreter.prototype.createTooTableEntry = function (tnumber) 
+	{
+		// tnumber	Tool number
+		// x,y,z 	Axis offset
+		// R 		Radius of tool
+		// I 		Front angle (lathe)
+		// J 		Back angle (lathe)
+		// Q 		Orientation (lathe)
+		this.toolTable[tnumber]={x:0,y:0,z:0,i:0,j:0,q:0,r:0};
+	};
 // If a G code is not implemented
-Interpreter.prototype.g9999  = function (cmd) 
-{
-	// body...
-};
+CWS.Interpreter.prototype.g9999  = function (cmd) 
+	{
+		// body...
+	};
 // If a M code is not implemented
-Interpreter.prototype.m9999  = function (cmd) 
-{
-	// body...
-};
-Interpreter.prototype.coordinatesToAbsolute  = function (cmd) 
-{
+CWS.Interpreter.prototype.m9999  = function (cmd) 
+	{
+		// body...
+	};
+
+CWS.Interpreter.prototype.coordinatesToAbsolute  = function (cmd) 
+	{
 	if (this.settings.machine_postion_g53==true)
 	{
 		cmd.param.xyz.x = cmd.param.xyz.x===undefined?this.position.x:cmd.param.xyz.x*this.modal.units;
@@ -114,22 +128,23 @@ Interpreter.prototype.coordinatesToAbsolute  = function (cmd)
 		cmd.param.xyz.y = cmd.param.xyz.y===undefined?this.position.y:cmd.param.xyz.y+this.settings.coord_system.y+this.settings.coord_offset.y;
 		cmd.param.xyz.z = cmd.param.xyz.z===undefined?this.position.z:cmd.param.xyz.z+this.settings.coord_system.z+this.settings.coord_offset.z;
 	}
-}
+	}
 
-// Sets the feed rate. If in G93 mode the value will be calculated after the G1|G2|G3 functions
-Interpreter.prototype.f0  = function (cmd) 
-{
+	// Sets the feed rate. If in G93 mode the value will be calculated after the G1|G2|G3 functions
+
+CWS.Interpreter.prototype.f0  = function (cmd) 
+	{
 	if (this.modal.feed_rate_mode==93)
 		this.settings.feed_rate93=cmd.param['f'];
 	else
 		this.settings.feed_rate=cmd.param['f'];
 	return true;
-};
+	};
 // For 3D printers S word can be time,temperature,voltage etc.
 // For the other machines S is the spindle speed and it cannot be negative
-Interpreter.prototype.s0  = function (cmd) 
-{
-	if (this.machineType!='Printer')
+CWS.Interpreter.prototype.s0  = function (cmd) 
+	{
+	if (this.machineType!='3D Printer')
 	{
 		if (cmd.param.s<0)
 			throw new ErrorParser(cmd.line.lineNumber,"Wrong S number. S cannot be a negative number",cmd.line.rawLine);
@@ -137,10 +152,11 @@ Interpreter.prototype.s0  = function (cmd)
 			this.spindle_speed=cmd.param.s;
 	};
 	return true;
-};
-Interpreter.prototype.move3dPrinter  = function (cmd)
-{
-	if (this.machineType=="Printer" && cmd.param.a==undefined && cmd.param.e==undefined )
+	};
+
+CWS.Interpreter.prototype.move3dPrinter  = function (cmd)
+	{
+	if (this.machineType=="3D Printer" && cmd.param.a==undefined && cmd.param.e==undefined )
 	{
 		this.coordinatesToAbsolute(cmd);
 		this.position.x=cmd.param.xyz.x;
@@ -149,9 +165,10 @@ Interpreter.prototype.move3dPrinter  = function (cmd)
 		return true;
 	}
 	return false;
-}
-Interpreter.prototype.g0  = function (cmd) 
-{
+	}
+
+CWS.Interpreter.prototype.g0  = function (cmd) 
+	{
 	if (this.move3dPrinter(cmd))
 		return;
 	this.coordinatesToAbsolute(cmd);
@@ -164,7 +181,7 @@ Interpreter.prototype.g0  = function (cmd)
 
 	l.ctype=0;
 	l.cmd=cmd;
-	if (this.machineType=="Printer" && cmd.param.a==undefined && cmd.param.e==undefined )
+	if (this.machineType=="3D Printer" && cmd.param.a==undefined && cmd.param.e==undefined )
 		return;
 	this.outputCommands.push(l);
 	if (this.position.x<=0 && this.machineType=="Lathe")
@@ -177,11 +194,14 @@ Interpreter.prototype.g0  = function (cmd)
 		l.cmd=cmd;
 		this.outputCommands.push(l);
 	}
-};
-Interpreter.prototype.g1  = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g1  = function (cmd) 
+	{
 	if (this.move3dPrinter(cmd))
+	{
 		return;
+	}
 	this.coordinatesToAbsolute(cmd);
 	var l={	x0:this.position.x,x1:cmd.param.xyz.x,
 			y0:this.position.y,y1:cmd.param.xyz.y,
@@ -202,9 +222,10 @@ Interpreter.prototype.g1  = function (cmd)
 		l.cmd=cmd;
 		this.outputCommands.push(l);
 	}
-};
-Interpreter.prototype.g2  = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g2  = function (cmd) 
+	{
 	if (this.move3dPrinter(cmd))
 		return;
 	this.coordinatesToAbsolute(cmd);
@@ -324,9 +345,10 @@ Interpreter.prototype.g2  = function (cmd)
   	this.position.x=cmd.param.xyz.x;
   	this.position.y=cmd.param.xyz.y;
 	this.position.z=cmd.param.xyz.z;
-};
-Interpreter.prototype.g3  = function (cmd) 
-{	
+	};
+
+CWS.Interpreter.prototype.g3  = function (cmd) 
+	{	
 	if (this.move3dPrinter(cmd))
 		return;
 	this.coordinatesToAbsolute(cmd);
@@ -446,13 +468,15 @@ Interpreter.prototype.g3  = function (cmd)
   	this.position.x=cmd.param.xyz.x;
   	this.position.y=cmd.param.xyz.y;
 	this.position.z=cmd.param.xyz.z;
-};
-Interpreter.prototype.g4  = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g4  = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.g10 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g10 = function (cmd) 
+	{
 	var l=Math.round(cmd.param['l']);
 	delete cmd.param['l'];
 	var p=Math.round(cmd.param['p']);
@@ -473,9 +497,10 @@ Interpreter.prototype.g10 = function (cmd)
 			this.coordinateSystemTable[p][k]=cmd.param[k];
 	}
 	// L10,L11 Not implemented
-};
-Interpreter.prototype.g17 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g17 = function (cmd) 
+	{
 	this.plane_select=cmd.number;
 	this.axisXYZ_0='x';
 	this.axisXYZ_1='y';
@@ -483,9 +508,10 @@ Interpreter.prototype.g17 = function (cmd)
 	this.axisIJK_0='i';
 	this.axisIJK_1='j';
 	this.axisIJK_linear='k';
-};
-Interpreter.prototype.g18 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g18 = function (cmd) 
+	{
 	this.plane_select=cmd.number;
 	this.axisXYZ_0='x';
 	this.axisXYZ_1='z';
@@ -493,9 +519,10 @@ Interpreter.prototype.g18 = function (cmd)
 	this.axisIJK_0='i';
 	this.axisIJK_1='k';
 	this.axisIJK_linear='j';
-};
-Interpreter.prototype.g19 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g19 = function (cmd) 
+	{
 	this.plane_select=cmd.number;
 	this.axisXYZ_0='y';
 	this.axisXYZ_1='z';
@@ -503,208 +530,249 @@ Interpreter.prototype.g19 = function (cmd)
 	this.axisIJK_0='j';
 	this.axisIJK_1='k';
 	this.axisIJK_linear='i';
-};
-Interpreter.prototype.g20 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g20 = function (cmd) 
+	{
 	this.modal.units = 25.4;
-};
-Interpreter.prototype.g21 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g21 = function (cmd) 
+	{
 	this.modal.units = 1.0;
-};
+	};
 // Go to Predefined Position
 // The parameter values are absolute machine coordinates in the native machine units
-Interpreter.prototype.g28 = function (cmd) 
-{
+CWS.Interpreter.prototype.g28 = function (cmd) 
+	{
 	// body...
-};
+	};
 // Go to Predefined Position
 // The parameter values are absolute machine coordinates in the native machine units
-Interpreter.prototype.g30 = function (cmd) 
-{
+CWS.Interpreter.prototype.g30 = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.g40 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g40 = function (cmd) 
+	{
 	// body...
 	this.modal.cutter_comp=40;
-};
-Interpreter.prototype.g41 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g41 = function (cmd) 
+	{
 	// body...
 	this.modal.cutter_comp=41;
-};
-Interpreter.prototype.g42 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g42 = function (cmd) 
+	{
 	// body...
 	this.modal.cutter_comp=42;
-};
-Interpreter.prototype.g43 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g43 = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.g49 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g49 = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.g53 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g53 = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.g54 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g54 = function (cmd) 
+	{
 	// body...
 	if (this.modal.cutter_comp!=40)
 		throw new ErrorParser(this.lineNumber,"Wrong G54. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[1];
-};
-Interpreter.prototype.g55 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g55 = function (cmd) 
+	{
 	// body...
 	if (this.modal.cutter_comp!=40)
 		throw new ErrorParser(this.lineNumber,"Wrong G55. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[2];
-};
-Interpreter.prototype.g56 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g56 = function (cmd) 
+	{
 	// body...
 	if (this.modal.cutter_comp!=40)
 		throw new ErrorParser(this.lineNumber,"Wrong G56. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[3];
-};
-Interpreter.prototype.g57 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g57 = function (cmd) 
+	{
 	// body...
 	if (this.modal.cutter_comp!=40)
 		throw new ErrorParser(this.lineNumber,"Wrong G57. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[4];
-};
-Interpreter.prototype.g58 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g58 = function (cmd) 
+	{
 	// body...
 	if (this.modal.cutter_comp!=40)
 		throw new ErrorParser(this.lineNumber,"Wrong G58. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[5];
-};
-Interpreter.prototype.g59 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g59 = function (cmd) 
+	{
 	// body...
 	if (this.modal.cutter_comp!=40)
 		throw new ErrorParser(this.lineNumber,"Wrong G59. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[6];
-};
-Interpreter.prototype.g61 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g61 = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.g64 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g64 = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.g90 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g90 = function (cmd) 
+	{
 	// body...
 	this.modal.distance=90;
-};
-Interpreter.prototype.g91 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g91 = function (cmd) 
+	{
 	this.modal.distance=91;
 	// body...
-};
-Interpreter.prototype.g92 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g92 = function (cmd) 
+	{
 	for (var k in cmd.param.xyz)
 		this.settings.coord_offset[k]=cmd.param.xyz[k]*this.modal.units;
-};
-Interpreter.prototype.g93 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g93 = function (cmd) 
+	{
 	// body...
 	this.modal.feed_rate_mode=93;
-};
-Interpreter.prototype.g94 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g94 = function (cmd) 
+	{
 	// body...
 	this.modal.feed_rate_mode=94;
 	this.settings.feed_rate=null;
-};
-Interpreter.prototype.g98 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g98 = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.g99 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.g99 = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m0	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m0	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m1	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m1	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m2	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m2	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m3	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m3	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m4	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m4	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m5	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m5	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m6	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m6	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m7	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m7	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m8	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m8	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m9	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m9	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m30	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m30	= function (cmd) 
+	{
 	// body...
 	this.stopRunning = true;
-};
-Interpreter.prototype.m48	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m48	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m49	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m49	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m60	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m60	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m82	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m82	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m83	= function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m83	= function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m104 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m104 = function (cmd) 
+	{
 	// body...
-};
-Interpreter.prototype.m109 = function (cmd) 
-{
+	};
+
+CWS.Interpreter.prototype.m109 = function (cmd) 
+	{
 	// body...
-};
+	}

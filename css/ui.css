@@ -1,53 +1,48 @@
-* {
-	margin:0;
-	padding:0;
-}
-body
+
+body 
 {
 	overflow: hidden;
+	padding: 0px;
+	margin: 0px;
+  list-style:none;
 }
-/*============================*/
-/*=====     HEADER        ====*/
-/*============================*/
-header 
+#topMenu
 {
+	z-index: 30;
 	margin-top:0px;
-    width: 100%;
-    left: 0px;
-    right: 450px;
-    overflow: hidden;
-    height: 45px;
-    position: relative;
-    margin: 0px;
-    z-index: 30;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+	width: 75%;
+	left: 0px;
+	right: 450px;
+	overflow: hidden;
+	height: 45px;
+	position: relative;
+	margin: 0px;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
-header:hover
+#topMenu:hover
 {
 	height: 100px;
 }
 nav 
 {
-    top:-20px;
-    position: absolute;
-    left:0;
-    right:450;
+	top:-36px;
+	position: absolute;
 	margin:20px auto;
-	/*max-width:800px;*/
-	/*width:90%;*/
+	width:100%;
 }
 nav ul 
 {
 	list-style:none;
+	padding: 0px;
 }
 nav > ul 
 {
-	/*display:table;*/
+
 	width:100%;
 	background:#272822;
 	position:relative;
@@ -56,7 +51,6 @@ nav > ul li
 {
 	display:table-cell;
 }
-/*Sub-menu*/
 nav > ul > li:hover > ul 
 {
 	display:block;
@@ -76,6 +70,7 @@ nav > ul > li > ul
 	-ms-transition: all .3s ease;
 	-o-transition: all .3s ease;
 	transition: all .3s ease;
+	opacity: 0.95;
 }
 nav > ul li div 
 {
@@ -85,7 +80,7 @@ nav > ul li div
 	padding:15px;
 	position: relative;
 	text-align:center;
-	cursor: hand;
+	cursor: pointer;
 	-webkit-transition: all .3s ease;
 	-moz-transition: all .3s ease;
 	-ms-transition: all .3s ease;
@@ -120,159 +115,164 @@ nav > ul > li > div:hover > span
 {
 	top:0;
 }
-/*============================*/
-/*=====     editor        ====*/
-/*============================*/
 #editor
 {
-	position: absolute;
-	top: 0px;
-	right: 0px;
-	width: 450px;
-	height: 100%;
 	z-index: 40;
-	/*background: #000;*/
-}
-/*============================*/
-/*=====  main canvas      ====*/
-/*============================*/
-#maincanvas
-{
-	position: absolute;
+	display: block;
+	position: fixed;
 	top: 0px;
-	right: 450px;
-	left: 0px;
-	bottom: 40px;
-	background: #f0f0f0;
+	bottom:0px;
+	right:0px;
+	width: 25%;
+	min-width: 300px;
+}
+#canvasContainer
+{
 	z-index: 10;
+	position: fixed;
+	top: 45px;
+	bottom: 30px;
+	width: 75%;
 }
-#maincanvas>canvas
+#bottomMenu
 {
-	height: 50%;
-}
-/*============================*/
-/*=====   footer menu     ====*/
-/*============================*/
-#footermenu
-{
-	position: absolute;
-	right: 450px;
+	z-index: 20;
+	font-size: 15;
+	position: fixed;
 	left: 0px;
 	bottom: 0px;
-	height: 20px;
+	width: 75%;
+	height: 15px;
+	padding: 10px 0 10px 0;
 	background:#272822;
-	padding: 10px;
-	z-index: 20;
-	-webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-#footermenu > span
-{
 	color: #dfdbd2;
-	padding-left: 5px;
-	font-size: 15px;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
-#footermenu > span:hover
+#bottomMenu span
+{
+	padding-left: 10px;
+	cursor: pointer;
+}
+#bottomMenu > span:hover
 {
 	color:#d14826;
 	cursor: pointer;
 }
 
-#mousecoordinate
-{
-	color:#d14826;
-	float: right;
-	cursor: auto;
+@media screen and (max-width: 700px) {
+	#editor
+	{
+		display: none;
+	}
+	#topMenu
+	{
+		width: 100%;
+	}
+	#canvasContainer
+	{
+		width: 100%;
+	}
+	#bottomMenu
+	{
+		width: 100%;
+	}
 }
-/*============================*/
-/*=====   Dialog box      ====*/
-/*============================*/
-.dialogBox
+#dialogBox
 {
-	position: absolute;
-	width: 400px;
-	/*margin: 0px 450px auto;*/
-	background: #2F3129;
-	display: block;
-	color:#dfdbd2;
-	-webkit-box-shadow: -5px 7px 29px 3px rgba(0,0,0,0.68);
-	-moz-box-shadow: -5px 7px 29px 3px rgba(0,0,0,0.68);
-	box-shadow: -5px 7px 29px 3px rgba(0,0,0,0.68);
-	z-index: 50;
-	top: 200px;
- }
-.dialogBoxH
-{
-	cursor:move;
-	padding: 10px;
-	height: auto;
-	background: #2F3129;
-	font-size: 18px;
-	z-index: 50;
-}
-.dialogBoxH >span
-{
-	float: right;
-	cursor: pointer;
-}
-.dialogBoxB
-{
-  padding: 20px;
-  max-height: 500px;
-  overflow: auto;
-  overflow-x: hidden;
-  background: #4e4c46;
-  display: block;
-}
-.dialogBoxB>label
-{
-    display: block;
-    margin: 5px 0px 5px 0px;
-}
-.dialogBoxB>input[type=text]
-{
-  width: 80%;
-  
-}
-.dialogBoxB>input[type=radio]
-{
-  display: inline;
-  margin: 5px 5px 5px 15px;
-}
-
-.dialogBoxB>button
-{
-  display: block;
-  margin-top: 10px;
-  height: 30px;
-  bottom: 0px;
-  width: 100px;
-  background: #d14826;
-  color: #fff;
+  width: 400px;
   border: 0px;
 }
-.dialogBoxRow
+#dialogBox ul
 {
-	position: relative;
-	display: table;
+  padding: 0px;
+  list-style:none;
 }
-.dialogBoxIcons
+#dialogBox label 
 {
-  margin: 20px;
-  position: relative;
-  float: left;
-  width: 80px;
+  padding: 0px;
   display: block;
+  margin: 10px 0px 10px 0px;
+}
+#dialog input
+{
+  display: inline;
+}
+.tableList
+{
+  display: table;
+}
+.tableList li
+{
+  width: 110px; 
+  margin: 5px;
+  display: inline-block;
+  vertical-align: top;
   text-align: center;
   cursor: pointer;
 }
-.dialogBoxIcons>span
+.tableList span
 {
-    font-size: 50px;
-    display: block;
-    margin: 0px auto 10px auto;
+  font-size: 50px;
+  display: block;
+  padding-bottom: 10px;
+}
+#menuTemplates
+{
+	display: none;
+}
+.ui-widget-header
+{
+    background: #2F3129;
+}
+.ui-corner-all
+{
+    border-radius: 0px;
+}
+.ui-dialog 
+{
+    color: #dfdbd2;
+    background: #4e4c46;
+    -webkit-box-shadow: -5px 7px 29px 3px rgba(0,0,0,0.68);
+    -moz-box-shadow: -5px 7px 29px 3px rgba(0,0,0,0.68);
+    box-shadow: -5px 7px 29px 3px rgba(0,0,0,0.68);
+}
+.ui-front
+{
+    font-family: "Times New Roman", Georgia, Serif;
+    font-size: 16;
+}
+.ui-button
+{
+
+    margin-top: 10px;
+    height: 30px;
+    bottom: 0px;
+    width: 100px;
+    background: #d14826;
+    color: #fff;
+    border: 0px;
+}
+.ui-dialog-titlebar-close
+{
+    background: inherit;
+}
+.ui-dialog-titlebar-close:before
+{
+    font-size: 15;
+    content: "x";
+}
+#machineIcon
+{
+    color: #dfdbd2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    text-align: right;
+    margin: 5px;
+    font-size: 35px;
 }

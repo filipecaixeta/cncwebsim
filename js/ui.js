@@ -1,270 +1,247 @@
-function DialogBox (title) 
-{
-	try{document.body.removeChild(document.getElementById("dialogBox"));}
-	catch(e){}
-	var dialog=document.createElement("div");
-	dialog.className="dialogBox";
-	dialog.id="dialogBox";
-	
-	dialog.dh=document.createElement('div');
-	dialog.dh.className="dialogBoxH";
-	dialog.appendChild(dialog.dh);
-	
-	dialog.db=document.createElement("div");
-	dialog.dh.innerHTML=title+'<span title="Close" class="icon-cross">';
-	dialog.db.className="dialogBoxB";
-	dialog.appendChild(dialog.db);
-	
-	document.body.appendChild(dialog);
-	
-	dialog.dh.getElementsByClassName("icon-cross")[0].addEventListener("click", function(e)
-	{
-    	document.body.removeChild(dialog);
-	});
+/**
+ * @author Filipe Caixeta / http://filipecaixeta.com.br/
+ */
 
-	var selected = dialog,
-    x_pos = 0, y_pos = 200,
-    x_elem = 0, y_elem = 0;
-	x_pos=(document.getElementById('maincanvas').offsetWidth-400)/2;
-	dialog.style.left=x_pos;
 
-	function _drag_init() 
+CWS.UI = function (controller) 
 	{
-		selected=dialog;
-	    x_elem = x_pos - selected.offsetLeft;
-	    y_elem = y_pos - selected.offsetTop;
-	}
+		$("#topMenu").click(
+			function  (ev) 
+			{
+				var title = ev.target.title
+				switch (title)
+				{
+					case "New Project":
+						var d = new CWS.DialogBox(title);
+						d.newProject(controller);
+						break;
+					case "Open Project":
+						var d = new CWS.DialogBox(title);
+						d.openProject(controller);
+						break;
+					case "Open Machine":
+						var d = new CWS.DialogBox(title);
+						d.openMachine(controller);
+						break;
+					case "Workpiece dimensions":
+						var d = new CWS.DialogBox(title);
+						d.workpieceDimensions(controller);
+						break;
+					default:
+						break;
+				}
+			});
 
-	function _move_elem(e) 
-	{
-	    x_pos = document.all ? window.event.clientX : e.pageX;
-	    y_pos = document.all ? window.event.clientY : e.pageY;
-	    if (selected !== null) {
-	        selected.style.left = (x_pos - x_elem ) + 'px';
-	        selected.style.top = (y_pos - y_elem ) + 'px';
-	    }
-	}
-	function _destroy() 
-	{
-	    selected = null;
-	}
-	dialog.dh.onmousedown = function () 
-	{
-	    _drag_init();
-	    document.onmousemove = _move_elem;
-		document.onmouseup = _destroy;
-	    return false;
+		this.elementEditor = $(document.getElementById("editor"));
+		this.elementTopMenu = $(document.getElementById("topMenu"));
+		this.elementCanvasContainer = $(document.getElementById("canvasContainer"));
+		this.elementBottomMenu = $(document.getElementById("bottomMenu"));
+		this.elementBody = $(document.body);
 	};
 
-	this.dialog=dialog;
-
-	switch (title)
+CWS.UI.prototype.resize = function()
 	{
-		case 'New File':
-			
-		default:
-			break;
+		var width = this.elementBody.innerWidth();
+		
+		var editorWidth;
+		if (this.elementEditor.css('display')=='none')
+			editorWidth = 0;
+		else
+			editorWidth = this.elementEditor.innerWidth();
+
+		this.elementTopMenu.innerWidth(width-editorWidth);
+		this.elementCanvasContainer.innerWidth(width-editorWidth);
+		this.elementBottomMenu.innerWidth(width-editorWidth);
+	};
+
+CWS.UI.prototype.constructor = CWS.UI;
+
+CWS.DialogBox = function (title)
+	{
+		$("#dialogBox").remove();
+		
+		this.dialog = $( '<div id="dialogBox" title="'+title+'" ></div>');
 	}
-}
-DialogBox.prototype.close = function () 
-{
-	document.body.removeChild(this.dialog);
-}
-///////////////////////////
-////      MENU FILE     ///
-///////////////////////////
-DialogBox.prototype.dialogNewFile = function()
-{
-	var html=  '<label for="filename">File Name: </label>'+
-  					'<input type="text" name="filename">'+
-      			'<label for="machinetype">Machine: </label>'+
-   					'<input type="radio" name="machinetype" value="Lathe">Lathe'+
-					'<input type="radio" name="machinetype" value="Mill">Mill'+
-					'<input type="radio" name="machinetype" value="Printer">3D printer'+
-      			'<label for="includeheader">Include sample header: </label>'+
-      				'<input type="radio" name="includeheader" value="yes">Yes'+
-					'<input type="radio" name="includeheader" value="no">No';
-    button=document.createElement("button");
-    button.innerHTML="Create";
-  	this.dialog.db.innerHTML=html;
-  	this.dialog.db.appendChild(button);
-  	var _this=this;
-  	button.addEventListener("click", function(e)
-	{
-		var filename="";
-		var includeheader="yes";
-		var machineType;
-		el=_this.dialog.db.getElementsByTagName('input');
-		for (var i = 0; i < el.length; i++) 
-		{
-			if (el[i].name=="filename")
-				filename=el[i].value;
-			else if (el[i].name=="machinetype" && el[i].checked)
-				machineType=el[i].value;
-			else if (el[i].name=="includeheader" && el[i].checked)
-				includeheader=el[i].value;
-		};
-		if (filename!="")
-		{
-			var pname=locSto.newProject({name:filename,machineType:machineType})
-			locSto.loadProject(pname);
-		}
-		_this.close();
-	});
-};
-DialogBox.prototype.dialogOpenFile = function()
-{
-	var projectList=locSto.projectNames;
-	var row = '<div class="dialogBoxRow">';
-	html="";
-	for (var i=0; i<projectList.length; i++)
-	{
-		if (i%3==0 || i==projectList.length-1)
-			html+=row;
 
-		html+= '<div class="dialogBoxIcons">'+
-					'<span class="icon icon-file-text2"></span>'+
-	  				'<div class="dialogBoxL">'+projectList[i]+'</div>'+
-	      		'</div>';
+CWS.DialogBox.prototype.constructor = CWS.DialogBox;
 
-		if (i%3==2 || i==projectList.length-1)
-			html+='</div>';		
-	} 
-  	this.dialog.db.innerHTML=html;
-  	var _this=this;
-  	this.dialog.db.addEventListener("click", function(e)
+CWS.DialogBox.prototype.newProject = function (controller)
 	{
-		var el=e.target.parentNode.childNodes[1];
-		if (el.className=="dialogBoxL")
-		{
-			locSto.loadProject(el.innerHTML);
-		}
-		_this.close();
-	});
-};
-///////////////////////////
-////    MENU MACHINE    ///
-///////////////////////////
-DialogBox.prototype.dialogOpenMachine = function()
-{
-	var row = '<div class="dialogBoxRow">';
-	html="";
-	html+=row;
-	html+= '<div class="dialogBoxIcons">'+
-				'<span class="icon icon-lathe"></span>'+
-	  			'<div class="dialogBoxL">Lathe</div>'+
-	      	'</div>';
-	html+= '<div class="dialogBoxIcons">'+
-				'<span class="icon icon-mill"></span>'+
-	  			'<div class="dialogBoxL">Mill</div>'+
-	      	'</div>';
-	html+= '<div class="dialogBoxIcons">'+
-				'<span class="icon icon-printer"></span>'+
-	  			'<div class="dialogBoxL">3D Printer</div>'+
-	      	'</div>';
-	html+='</div>';
-  	this.dialog.db.innerHTML=html;
-	var _this=this;
-  	this.dialog.db.addEventListener("click", function(e)
-	{
-		var el=e.target.parentNode.childNodes[1];
-		if (el.className=="dialogBoxL")
-		{
-			locSto.machineType = el.innerHTML;
-		}
-		_this.close();
-	});
-};
-///////////////////////////
-////   MENU Workpiece   ///
-///////////////////////////
-DialogBox.prototype.dialogWPDimension = function()
-{
-	var workpiece=locSto.workpiece;
-	if (locSto.machineType=="Lathe")
-	{
-		html=	'<label for="Diameter">Diameter: </label>'+
-					'<input type="number" name="Diameter" min="0.001" max="10000" step = "any" value="'+workpiece.diameter+'">'+
-				'<label for="Length">Length: </label>'+
-					'<input type="number" name="Length" min="0.001" max="10000" step = "any" value="'+workpiece.len+'">';
-	}
-	else
-	{
-		html=	'<label for="Size X">Size X: </label>'+
-					'<input type="number" name="Size X" min="0.001" max="10000" step = "any" value="'+workpiece.x+'">'+
-				'<label for="Size Y">Length: </label>'+
-					'<input type="number" name="Size Y" min="0.001" max="10000" step = "any" value="'+workpiece.y+'">'+
-				'<label for="Size Z">Length: </label>'+
-					'<input type="number" name="Size Z" min="0.001" max="10000" step = "any" value="'+workpiece.z+'">';	
-	}
-	button=document.createElement("button");
-    button.innerHTML="Save";
-  	this.dialog.db.innerHTML=html;
-  	this.dialog.db.appendChild(button);
-  	var _this=this;
-  	button.addEventListener("click", function(e)
-	{
-		el=_this.dialog.db.getElementsByTagName('input');
-		for (var i = 0; i < el.length; i++) 
-		{
-			if (el[i].name=="Diameter")
-				workpiece.diameter = parseFloat(el[i].value);
-			else if (el[i].name=="Length")
-				workpiece.len = parseFloat(el[i].value);
-			else if (el[i].name=="Size X")
-				workpiece.x = parseFloat(el[i].value);
-			else if (el[i].name=="Size Y")
-				workpiece.y = parseFloat(el[i].value);
-			else if (el[i].name=="Size Z")	
-				workpiece.z = parseFloat(el[i].value);
-		};
-		locSto.workpiece = workpiece;
-		runCode();
-		_this.close();
-	});
-};
-function initUI () 
-{
-	document.getElementById("mainmenu").addEventListener("click", function(e)
-	{
-		switch (e.target.title)
-		{
-			case "New File":
-				var d = new DialogBox(e.target.title);
-				d.dialogNewFile();
-				break;
-			case "Open File":
-				var d = new DialogBox(e.target.title);
-				d.dialogOpenFile();
-				break;
-			case "Open Machine":
-				var d = new DialogBox(e.target.title);
-				d.dialogOpenMachine();
-				break;
-			case "Workpiece dimensions":
-				var d = new DialogBox(e.target.title);
-				d.dialogWPDimension();
-				break;
-			default:
-				break;
-		}
-	});
-	document.getElementById("footermenu").addEventListener("click", function(e)
-	{
-		switch (e.target.title)
-		{
-			case "Simulate 2D":
-				toggleRenderer('2d');
-				break;
-			case "Simulate 3D":
-				toggleRenderer('3d');
-				break;
-			case "Run":
-				reloadSim();
-				break;
-			default:
-				break;
-		}
-	});
+		var html = '<form id="menuNewProject">'+
+			'<ul>'+
+			'  <li>'+
+			'    <label for= "projectName" >Project Name</label>'+
+			'    <input type= "text" name= "projectName" />'+
+			'  </li>'+
+			'  <li>'+
+			'    <label for= "machineType" >Machine</label>'+
+			'    <input type="radio" name="machineType" value="Lathe" checked> Lathe'+
+			'    <input type="radio" name="machineType" value="Mill"> Mill'+
+			'    <input type="radio" name="machineType" value="3D Printer"> 3D Printer'+
+			'  </li>'+
+			'</ul>'+
+			'</form>';
+		this.dialog.append($(html));
+		this.dialog.dialog(
+	      {
+	      width: 400,
+	      buttons: 
+	        { 
+	            "Create": function()
+	            {
+	            	var values = {};
+	            	var result = $(this.firstChild).serializeArray();
+	            	for (var i = 0; i < result.length; i++) 
+	            	{
+	            		values[result[i].name]=result[i].value;
+	            	}
+	              	controller.createProject(values);
+	              	$(this).dialog("close");
+	            },
+	          	"Cancel": function()
+	            {
+          			$(this).dialog("close");
+	            }
+	        }
+	      });
+	};
 
-}
+CWS.DialogBox.prototype.openProject = function (controller)
+	{
+		html = '<ul class="tableList">';
+		var fileList = Object.keys(controller.listProjects());
+		for (var i = 0; i < fileList.length; i++) 
+		{
+			html += '<li><span class="icon icon-file-text2"></span>'+fileList[i]+'</li>';
+		}
+		html += "</ul>";
+        var dialog = this.dialog;
+		html = $(html).click(function (event) 
+			{
+                if (event.target.parentElement.tagName.toLocaleLowerCase()=="div")
+                    return;
+                var projectName="";
+                if (event.target.tagName.toLocaleLowerCase()=="li")
+                {
+                    projectName = event.target.textContent;
+                }
+                else
+                {
+                    projectName = event.target.parentElement.textContent;
+                }
+                controller.openProject(projectName);
+                dialog.dialog("close");
+			});
+		this.dialog.append(html);
+		this.dialog.dialog(
+	      {
+	      width: 400,
+	      buttons: 
+	        { 
+	          	"Cancel": function()
+	            {
+          			$(this).dialog("close");
+	            }
+	        }
+	      });
+	};
+
+CWS.DialogBox.prototype.openMachine = function (controller)
+	{
+		html = '<ul class="tableList">'+
+		'  <li><span class="icon icon-lathe"></span>Lathe</li>'+
+		'  <li><span class="icon icon-mill"></span>Mill</li>'+
+		'  <li><span class="icon icon-printer"></span>3D Printer</li>'+
+		'</ul>';
+        var dialog = this.dialog;
+		html = $(html).click(function (event) 
+			{
+                if (event.target.parentElement.tagName.toLocaleLowerCase()=="div")
+                    return;
+                var machineName="";
+                if (event.target.tagName.toLocaleLowerCase()=="li")
+                {
+                    machineName = event.target.textContent;
+                }
+                else
+                {
+                    machineName = event.target.parentElement.textContent;
+                }
+                controller.openMachine(machineName);
+                dialog.dialog("close");
+			});
+		this.dialog.append(html);
+		this.dialog.dialog(
+	      {
+	      width: 400,
+	      buttons: 
+	        { 
+	          	"Cancel": function()
+	            {
+          			$(this).dialog("close");
+	            }
+	        }
+	      });
+	};
+
+CWS.DialogBox.prototype.workpieceDimensions = function (controller)
+	{
+        var machineType = controller.getMachineType();
+        var workpiece = controller.getWorkpiece();
+        var html = "";
+        if (machineType=="Lathe")
+        {
+            html = '<form id="workpieceDimensions">'+
+            '<ul>'+
+            '  <li>'+
+            '    <label for= "x" >Diameter</label>'+
+            '    <input type= "text" name= "x" value="'+workpiece.x+'"/>'+
+            '  </li>'+
+            '   <li>'+
+            '    <label for= "z" >Lenght</label>'+
+            '    <input type= "text" name= "z" value="'+workpiece.z+'"/>'+
+            '  </li>'+
+            '</ul></form>';
+        }
+        else if (machineType=="Mill")
+        {
+            html = '<form id="workpieceDimensions">'+
+            '<ul>'+
+            '  <li>'+
+            '    <label for= "x" >Size X</label>'+
+            '    <input type= "text" name= "x" value="'+workpiece.x+'"/>'+
+            '  </li>'+
+            '  <li>'+
+            '    <label for= "y" >Size Y</label>'+
+            '    <input type= "text" name= "y" value="'+workpiece.y+'"/>'+
+            '  </li>'+
+            '   <li>'+
+            '    <label for= "z" >Size Z</label>'+
+            '    <input type= "text" name= "z" value="'+workpiece.z+'"/>'+
+            '  </li>'+
+            '</ul></form>';
+        }
+		this.dialog.append($(html));
+		this.dialog.dialog(
+	      {
+	      width: 400,
+	      buttons: 
+	        { 
+	            "Save": function()
+	            {
+	            	var values = {};
+	            	var result = $(this.firstChild).serializeArray();
+	            	for (var i = 0; i < result.length; i++) 
+	            	{
+	            		values[result[i].name]=result[i].value;
+	            	}
+	              	controller.setWorkpieceDimensions(values);
+	              	$(this).dialog("close");
+	            },
+	          	"Cancel": function()
+	            {
+          			$(this).dialog("close");
+	            }
+	        }
+	      });
+	};

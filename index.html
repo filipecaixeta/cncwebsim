@@ -2,79 +2,149 @@
 <head>
 	<meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" type="text/css" href="css/fontIcon.css">
-	<link rel="stylesheet" type="text/css" href="css/ui.css">
-	<script id="shader-vs" type="x-shader/x-vertex">
-		attribute vec3 position;
-		// Vertical distance from horizontal axis. Must be >255
-		varying float vDist;
-		uniform float maxL;
-		uniform float maxR;
-		void main() 
-		{
-			// Z = horizontal
-			// X = vertical
-		    float z=position.z/maxL*2.0-1.0;
-		    float x=position.x/maxR*2.0-1.0;
-		    gl_Position = vec4(z,1.0,x, 1.0 );
-		    vDist = position.x;
-		}
-	</script>
-	<script id="shader-fs" type="x-shader/x-fragment">
-		precision highp float;	
-		varying float vDist;
-
-		void main(void) 
-		{
-			// The color value will be used later to get the value of X axis
-			// If vDist has the folowing format AAA.BBCCDDDDD
-			// R channel = 0<=AAA<=255 
-			// G channel = 0<=BB<=99
-			// B channel = 0<=CC.DDDD<100
-			// vDist value will be R+G/100+B/10000
-			// if (vDist<0.0)
-			// 	gl_FragColor = vec4(0.0,0.0,0.0,1.0);
-			// else
-			{
-				float r=floor(vDist);
-				float g=(vDist-r)*100.0;
-				float b=g*100.0-floor(g)*100.0;
-				g=floor(g);
-				gl_FragColor = vec4(r/255.0,g/255.0,b/255.0,1.0);
-				//gl_FragColor = vec4(1.0,1.0,1.0,1.0);
-			}
-		}
-	</script>
-	<script src="js/ace/ace.js"></script>
-	<script src="js/three.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.structure.css">
+    <link rel="stylesheet" type="text/css" href="css/fontIcon.css">
+    <link rel="stylesheet" type="text/css" href="css/ui.css">
+    
+    <script src="js/lz-string.min.js"></script>
+    <script src="js/ace/ace.js"></script>
+    <script src="js/jquery-1.12.0.min.js"></script>
+    <script src="js/jquery-ui.min.js"></script> 
+    <script src="js/three.min.js"></script>
 	<script src="js/OrbitControls.js"></script>
-	<script src="js/lz-string.min.js"></script>
+	<script src="js/TrackballControls.js"></script>
+	<script src="js/stats.min.js"></script>
+    
+    <script src="js/cws.js"></script>
 	<script src="js/storage.js"></script>
-	<script src="js/ui.js"></script>
-	<script src="js/parser.js"></script>
-	<script src="js/interpreter.js"></script>
-	<script src="js/renderer3D.js"></script>
-	<script src="js/lathe.js"></script>
-	<script src="js/mill.js"></script>
-	<script src="js/printer.js"></script>
+	<script src="js/project.js"></script>
 	<script src="js/editor.js"></script>
-
-	<script src="js/main.js"></script>
+	<script src="js/renderer.js"></script>
+	<script src="js/shaders.js"></script>
+	<script src="js/machine.js"></script>
+	<script src="js/lathe.js"></script>
+    <script src="js/mill.js"></script>
+    <script src="js/printer.js"></script>
+	<script src="js/controller.js"></script>
+	<script src="js/ui.js"></script>
+	
 	<script type="text/javascript">
+	var motion,editor,storage,renderer,controls,stats,ui;
+
 	window.addEventListener("load", (function () 
 	{
-		mainInit();
+		motion = new Worker("./js/motion.js");
+        motion.running = false;
+        motion.parameter = null;
+        motion.run = function ()
+        {
+            if (this.running==false && this.parameter!==null)
+            {
+                this.running=true;
+                this.postMessage(this.parameter);
+                this.parameter = null;
+            }
+        };
+		
+		storage = new CWS.Storage({useCompression:true});		
+		editor = new CWS.CodeEditor();
+		
+        controller = new CWS.Controller();
+        controller.storage = storage;
+		controller.editor = editor;
+		
+        if (storage.isFirstRun)
+            {
+                controller.createProject({projectName:"Untitled",machineType:"Lathe"});
+            }
+        else
+            {
+                controller.openProject(storage.header.name);
+            }
+		
+		ui = new CWS.UI(controller);
+		ui.resize();
+
+
+		editor.subscribeToCodeChanged(function (code,ev) {
+			if (code!="")
+				storage.code = code;
+		});
+		editor.subscribeToCodeChanged(function (code,ev) {
+             motion.parameter = {header:storage.header,code:code};
+		});
+
+		var maincanvasdiv = document.getElementById("canvasContainer");
+		var width = maincanvasdiv.offsetWidth;
+		var height = maincanvasdiv.offsetHeight;
+
+		stats = new Stats();
+		stats.domElement.style.position = 'absolute';
+		stats.domElement.style.bottom = '0px';
+		stats.domElement.style.right = '0px';
+		maincanvasdiv.appendChild( stats.domElement );
+
+		renderer = new CWS.Renderer("renderer1");
+		renderer.setSize(width,height);
+		maincanvasdiv.appendChild(renderer.domElement);
+
+		controls = new THREE.TrackballControls( renderer.camera ,renderer.domElement);
+
+		controls.rotateSpeed = 5.0;
+		controls.zoomSpeed = 2;
+		controls.panSpeed = 0.8;
+
+		controls.noZoom = false;
+		controls.noPan = false;
+
+		controls.staticMoving = true;
+		controls.dynamicDampingFactor = 0.3;
+
+		motion.onmessage = function(e) 
+		{
+			controller.machine.setMotion(e.data);
+			var mesh = controller.machine.create2DWorkpieceLimits();
+			renderer.updateMesh(mesh);
+			mesh = controller.machine.create2DWorkpiece();
+			renderer.updateMesh(mesh);
+			mesh = controller.machine.create3DWorkpiece();
+			renderer.updateMesh(mesh);
+            this.running = false;
+		};
+
+		function onWindowResize() 
+		{
+			ui.resize();
+			renderer.setSize(maincanvasdiv.offsetWidth,maincanvasdiv.offsetHeight);
+			controls.handleResize();
+		}
+
+		window.addEventListener( 'resize', onWindowResize, false );
+	
+		function animate() 
+		{
+			requestAnimationFrame( animate );
+            motion.run();
+			controls.update();
+			stats.update();
+			renderer.render();
+		}
+		animate();
+        editor.codeChanged();
+
 	}),true);
 </script>
 </head>
 <body>
-	<header id="mainmenu">
+	<div id="editor">
+	</div>
+	<div id="topMenu">
 		<nav>
 			<ul>
 				<li><div><span title="File" class="icon icon-folder-open"></span>File</div>
 					<ul>
-						<li><div title="New File">New</div></li>
-						<li><div title="Open File">Open</div></li>
+						<li><div title="New Project">New</div></li>
+						<li><div title="Open Project">Open</div></li>
 						<li><div title="Delete File">Delete</div></li>
 						<li><div title="Edit File">Edit</div></li>
 						<li><div title="Import File">Import</div></li>
@@ -106,19 +176,17 @@
 				</li>
 			</ul>
 		</nav>
-	</header>
-	<div id="editor">
+        <span id="machineIcon"></span>
 	</div>
-	<div id="maincanvas">
+	<div id="canvasContainer">
 	</div>
-	<div id="footermenu">
+	<div id="bottomMenu">
 		<span title="Run" class="icon-play3"></span>
 		<span title="Pause" class="icon-pause2"></span>
 		<span title="Stop" class="icon-stop2"></span>
 		<span title="Step" class="icon-forward3"></span>
 		<span title="Simulate 2D" >2D</span>
 		<span title="Simulate 3D" >3D</span>
-		<div id="mousecoordinate">X: 0.00 Y: 0.00 Z: 0.00</div>
 	</div>
 </body>
 </html>
