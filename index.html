@@ -2,10 +2,13 @@
 <head>
 	<meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="google" content="nositelinkssearchbox" />
+    <meta name="description" content="CNC Web Simulator, an open source CNC simulator for web browser. It can simulate lathe, mill and 3D printers." />
+    
     <link rel="stylesheet" type="text/css" href="css/jquery-ui.structure.css">
     <link rel="stylesheet" type="text/css" href="css/fontIcon.css">
     <link rel="stylesheet" type="text/css" href="css/ui.css">
-    
+    <title>CNC Web Simulator</title>
     <script src="js/lz-string.min.js"></script>
     <script src="js/ace/ace.js"></script>
     <script src="js/jquery-1.12.0.min.js"></script>
@@ -46,7 +49,7 @@
             }
         };
 		
-		storage = new CWS.Storage({useCompression:true});		
+		storage = new CWS.Storage({useCompression:true,useLocalStorage:true});		
 		editor = new CWS.CodeEditor();
 		
         controller = new CWS.Controller();
@@ -64,7 +67,6 @@
 		
 		ui = new CWS.UI(controller);
 		ui.resize();
-
 
 		editor.subscribeToCodeChanged(function (code,ev) {
 			if (code!="")
