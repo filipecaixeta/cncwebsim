@@ -112,6 +112,18 @@ nav > ul > li > div > .icon
 	display:block;
 	line-height:45px;
 }
+a
+{
+	text-decoration: none;
+}
+a:link {
+    color: #dfdbd2;
+}
+
+/* visited link */
+a:visited {
+    color: #dfdbd2;
+}
 nav > ul > li > div:hover > span 
 {
 	top:0;
@@ -289,4 +301,9 @@ nav > ul > li > div:hover > span
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+}
+
+.notImplemented
+{
+	color: #707070;
 }
