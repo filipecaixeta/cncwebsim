@@ -26,7 +26,7 @@ G21 ; set units to millimeters
 G92 E0
 M82 ; use absolute distances for extrusion
 G1 F1800.000 E-1.00000
-G92 E0
+G92 E0 x-100 y-100 
 G1 X109.873 Y109.869 F7800.000
 G1 F1800.000 E1.00000
 G1 X111.481 Y109.869 F540.000 E1.06695
