@@ -2,18 +2,19 @@
  * @author Filipe Caixeta / http://filipecaixeta.com.br/
  */
 
-
 CWS.Mill = function (options)
 	{
 		options = options || {};
 		CWS.Machine.call( this, options );
 
-		this.tool = {radius:0.5,angle:70};
+		this.tool = {radius:2.5,angle:70};
 
 		this.canvas = null;
 		this.gl = null;
+        this.debug = false;
     
-		this.initWebGL();
+        this.initWebGL();
+        this.initMesh();
 	}
 
 CWS.Mill.prototype = Object.create( CWS.Machine.prototype );
@@ -27,7 +28,8 @@ CWS.Mill.prototype.initWebGL = function ()
         this.canvas.style.zIndex ="1000000000";
         this.canvas.style.position = "absolute";
         this.canvas.style.background = "#f0f0f0";
-        // document.body.appendChild(this.canvas); // For debugging
+        if (this.debug)
+            document.body.appendChild(this.canvas); // For debugging
 		var attributes = 
 		{
 			alpha: true,
@@ -35,7 +37,7 @@ CWS.Mill.prototype.initWebGL = function ()
 			stencil: false,
 			antialias: false,
 			premultipliedAlpha: false,
-			preserveDrawingBuffer: true
+			preserveDrawingBuffer: true,
 		};
 		this.gl=this.canvas.getContext( 'webgl', attributes ) || this.canvas.getContext( 'experimental-webgl', attributes);
 		if ( this.gl === null ) 
@@ -51,11 +53,11 @@ CWS.Mill.prototype.initWebGL = function ()
         this.shaderProgram1.dimensions = this.gl.getUniformLocation(this.shaderProgram1, "dimensions");
         this.shaderProgram1.resolution = this.gl.getUniformLocation(this.shaderProgram1, "resolution");
         this.shaderProgram1.currentDimension = this.gl.getUniformLocation(this.shaderProgram1, "currentDimension");
+        this.shaderProgram1.toolRadius = this.gl.getUniformLocation(this.shaderProgram1, "toolRadius");
         this.shaderProgram1.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram1, "position");
     
         this.shaderProgram2 = this.createProgram(this.gl, CWS.SHADER["vs-mill-2-3D"], CWS.SHADER["fs-mill-2-3D"]);
         this.gl.useProgram(this.shaderProgram2);    
-        this.shaderProgram2.texture = this.gl.getUniformLocation(this.shaderProgram2, "uSampler");
         this.shaderProgram2.dimensions = this.gl.getUniformLocation(this.shaderProgram2, "dimensions");
         this.shaderProgram2.currentDimension = this.gl.getUniformLocation(this.shaderProgram2, "currentDimension");
         this.shaderProgram2.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram2, "position");
@@ -68,9 +70,88 @@ CWS.Mill.prototype.initWebGL = function ()
         this.gl.clearColor(0.0,0.0,0.0,0.0);
     };
 
+CWS.Mill.prototype.initMesh = function ()
+    {
+        var tempDim = Math.max(this.workpiece.x,this.workpiece.y)+this.tool.radius*2;
+        this.renderDimensions = new THREE.Vector3(tempDim,tempDim,this.workpiece.z);
+        var minX = Math.round(this.tool.radius*this.renderResolution/this.renderDimensions.x);
+        var minY = Math.round(this.tool.radius*this.renderResolution/this.renderDimensions.y);
+        var maxX = Math.round((parseFloat(this.workpiece.x)+this.tool.radius)*this.renderResolution/this.renderDimensions.x);
+        var maxY = Math.round((parseFloat(this.workpiece.y)+this.tool.radius)*this.renderResolution/this.renderDimensions.y);
+        var geometry = new THREE.PlaneBufferGeometry( this.workpiece.x, this.workpiece.y,
+                            maxX-minX+1, maxY-minY+1 );
+            geometry.dim = {x:maxX-minX+2,y:maxY-minY+2};
+            geometry.dynamic = true;
+            geometry.attributes.position.dynamic = true;
+            if ( geometry.attributes.normal === undefined ) 
+            {
+                geometry.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( geometry.attributes.position.array.length ), 3 ) );
+            }
+            geometry.attributes.position.dynamic = true;
+            geometry.attributes.normal.dynamic = true;
+            geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0,0,0),99999);
+
+        var positions = geometry.attributes.position.array;
+    
+        var xDist = this.renderDimensions.x/65535.0;
+        var yDist = this.renderDimensions.y/65535.0;
+        var zDist = this.renderDimensions.z/65535.0;
+        var rowSize = (maxX-minX+2);
+        yi = 0;
+        for (var xi=0; xi<(maxX-minX+2); xi++) 
+        {
+            var arrayPos2 = (yi*rowSize+xi)*3;
+            positions[arrayPos2+0] = (xi/(xi+2)*xi)/(this.renderResolution-1)*this.renderDimensions.x;
+            positions[arrayPos2+1] = (yi/(yi+2)*yi)/(this.renderResolution-1)*this.renderDimensions.y;
+            positions[arrayPos2+2] = 0;
+        }
+        yi = maxY-minY+1;
+        for (var xi=0; xi<(maxX-minX+2); xi++) 
+        {
+            var arrayPos2 = (yi*rowSize+xi)*3;
+            positions[arrayPos2+0] = (xi/(xi+2)*xi)/(this.renderResolution-1)*this.renderDimensions.x;
+            positions[arrayPos2+1] = (yi/(yi+2)*yi)/(this.renderResolution-1)*this.renderDimensions.y;
+            positions[arrayPos2+2] = 0;
+        }
+        xi = 0;
+        for (var yi=0; yi<(maxY-minY+2); yi++) 
+        {
+            var arrayPos2 = (yi*rowSize+xi)*3;
+            positions[arrayPos2+0] = (xi/(xi+2)*xi)/(this.renderResolution-1)*this.renderDimensions.x;
+            positions[arrayPos2+1] = (yi/(yi+2)*yi)/(this.renderResolution-1)*this.renderDimensions.y;
+            positions[arrayPos2+2] = 0;
+        }
+        xi = maxX-minX+1;
+        for (var yi=0; yi<(maxY-minY+2); yi++) 
+        {
+            var arrayPos2 = (yi*rowSize+xi)*3;
+            positions[arrayPos2+0] = (xi/(xi+2)*xi)/(this.renderResolution-1)*this.renderDimensions.x;
+            positions[arrayPos2+1] = (yi/(yi+2)*yi)/(this.renderResolution-1)*this.renderDimensions.y;
+            positions[arrayPos2+2] = 0;
+        }
+        var mesh = new THREE.Mesh( geometry, this.material3D);
+            mesh.name="3DWorkpiece";
+        this.mesh3D = mesh;
+    };
+
+CWS.Mill.prototype.updateWorkpieceDimensions = function ()
+    {
+        this.initMesh();
+    }
+
+CWS.Mill.prototype.updateTool = function ()
+    {
+        this.initMesh();
+    }
+
+CWS.Mill.prototype.updateRendererResolution = function ()
+    {
+        this.initMesh();
+    }
+
 CWS.Mill.prototype.createToolTexture = function (dim,ang)
     {
-        var imgData = new Uint8ClampedArray(dim*dim*4);
+        var imgData = new Uint8Array(dim*dim*4);
         function distance(cx,cy,x,y)
         {
             return Math.sqrt(Math.pow(cx-x,2)+Math.pow(cy-y,2));
@@ -120,9 +201,6 @@ CWS.Mill.prototype.createToolTexture = function (dim,ang)
 CWS.Mill.prototype.setRendererResolution = function (renderResolution)
     {
         this.renderResolution = renderResolution || this.renderResolution;
-        this.geometryL1 = new THREE.PlaneBufferGeometry( this.workpiece.x, this.workpiece.y,
-                            this.renderResolution -1 , this.renderResolution - 1 );
-    
         this.pixels1 = new Uint8Array(this.renderResolution*this.renderResolution*4);
         this.pixels2 = new Uint8Array(this.renderResolution*this.renderResolution*4);
         this.canvas.width  = this.renderResolution;
@@ -212,9 +290,9 @@ CWS.Mill.prototype.draw = function(numItems,options,pixels)
 
 CWS.Mill.prototype.calculatePositionAndTexture = function(dimensions,toolRadius)
     {
-        var xDist = dimensions.x/65535.0;
-        var yDist = dimensions.y/65535.0;
-        var zDist = dimensions.z/65535.0;
+        var xDist = (this.renderDimensions.x+1)/65535.0;
+        var yDist = (this.renderDimensions.y+1)/65535.0;
+        var zDist = (this.renderDimensions.z+1)/65535.0;
         var dataview1 = new DataView( this.pixels1.buffer, 0 );
         var dataview2 = new DataView( this.pixels2.buffer, 0 );
         var positions = [];
@@ -242,33 +320,33 @@ CWS.Mill.prototype.calculatePositionAndTexture = function(dimensions,toolRadius)
         {
             texturePos[i+ 0] = 1;
             texturePos[i+ 1] = 1;
-            texturePos[i+ 2] = 0;
+            texturePos[i+ 2] = -1;
             texturePos[i+ 3] = 1;
-            texturePos[i+ 4] = 0;
-            texturePos[i+ 5] = 0;
+            texturePos[i+ 4] = -1;
+            texturePos[i+ 5] = -1;
 
             texturePos[i+ 6] = 1;
             texturePos[i+ 7] = 1;
-            texturePos[i+ 8] = 0;
-            texturePos[i+ 9] = 0;
+            texturePos[i+ 8] = -1;
+            texturePos[i+ 9] = -1;
             texturePos[i+10] = 1;
-            texturePos[i+11] = 0;
+            texturePos[i+11] = -1;
         }
         return [positions,texturePos];
     };
 
 CWS.Mill.prototype.create3DWorkpiece = function () 
 	{	
-        this.toolTexture = this.createToolTexture(32,this.tool.angle);
-    
+        // this.toolTexture = this.createToolTexture(32,this.tool.angle);
         var dimensions = this.workpiece;
     
 		this.gl.useProgram(this.shaderProgram1);
         this.gl.bindTexture(this.gl.TEXTURE_2D, null);
         this.linesVertexPositionBuffer = this.createBuffer(  this.linesVertexPositionBuffer,this.motionData.positions,3,
                                                         this.shaderProgram2.vertexPositionAttribute);
-        this.gl.uniform3f(this.shaderProgram1.dimensions, dimensions.x,dimensions.y,dimensions.z);
+        this.gl.uniform3f(this.shaderProgram1.dimensions, this.renderDimensions.x,this.renderDimensions.y,this.renderDimensions.z);
         this.gl.uniform1f(this.shaderProgram1.resolution, this.renderResolution);
+        this.gl.uniform1f(this.shaderProgram1.toolRadius, this.tool.radius);
         this.gl.uniform1i(this.shaderProgram1.currentDimension, 0);
         this.draw(this.linesVertexPositionBuffer.numItems,{LINE_STRIP:true,POINTS:true},this.pixels1);
         this.gl.uniform1i(this.shaderProgram1.currentDimension, 1);
@@ -284,62 +362,125 @@ CWS.Mill.prototype.create3DWorkpiece = function ()
         this.texcoordBuffer = this.createBuffer( this.texcoordBuffer,texturePos,2,
                                             this.shaderProgram2.texcoordAttribute);
         
-        this.gl.activeTexture(this.gl.TEXTURE0);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.toolTexture);
-        this.gl.uniform1i(this.shaderProgram2.texture, 0);
-        this.gl.uniform3f(this.shaderProgram2.dimensions, dimensions.x,dimensions.y,dimensions.z);
+        this.gl.uniform3f(this.shaderProgram2.dimensions, this.renderDimensions.x,this.renderDimensions.y,this.renderDimensions.z);
         this.gl.uniform1i(this.shaderProgram2.currentDimension, 0);
         this.draw(this.linesVertexPositionBuffer.numItems,{TRIANGLES:true},this.pixels1);
         this.gl.uniform1i(this.shaderProgram2.currentDimension, 1);
         this.draw(this.linesVertexPositionBuffer.numItems,{TRIANGLES:true},this.pixels2);
 
-        this.geometryL1.dynamic = true;
-        var positions = this.geometryL1.attributes.position.array;
+        var geometry  = this.mesh3D.geometry;
+        var positions = geometry.attributes.position.array;
     
-        var xDist = dimensions.x/65535.0;
-        var yDist = dimensions.y/65535.0;
-        var zDist = dimensions.z/65535.0;
+        var xDist = this.renderDimensions.x/65535.0;
+        var yDist = this.renderDimensions.y/65535.0;
+        var zDist = this.renderDimensions.z/65535.0;
         var dataview1 = new DataView( this.pixels1.buffer, 0 );
         var dataview2 = new DataView( this.pixels2.buffer, 0 );
         var i=0;
-        for (var xi=0; xi<this.renderResolution; xi++) 
-		{
-            for (var yi=0; yi<this.renderResolution; yi++)   
+        var minX = Math.round(this.tool.radius*this.renderResolution/this.renderDimensions.x);
+        var minY = Math.round(this.tool.radius*this.renderResolution/this.renderDimensions.y);
+        var maxX = Math.round((parseFloat(this.workpiece.x)+this.tool.radius)*this.renderResolution/this.renderDimensions.x);
+        var maxY = Math.round((parseFloat(this.workpiece.y)+this.tool.radius)*this.renderResolution/this.renderDimensions.y);
+
+        var rowSize = (maxX-minX+2);
+        for (var yi=minY; yi<maxY; yi++)   
+        {
+            for (var xi=minX; xi<maxX; xi++) 
             {
-                if (dataview2.getUint8(i+3)!==0)
+                var arrayPos1 = (yi*this.renderResolution+xi)*4;
+                var arrayPos2 = ((yi-minY+1)*rowSize+xi-minX+1)*3;
+                if (dataview2.getUint8(arrayPos1+3)!==0)
                 {
-                    var x = dataview1.getUint16(i)*xDist;
-                    var y = dataview1.getUint16(i+2)*yDist;
-                    var z = dimensions.z-dataview2.getUint16(i)*zDist;
-                    // positions[xi*this.renderResolution*3+yi*3+0] = x;
-                    // positions[xi*this.renderResolution*3+yi*3+1] = y;
-                    positions[xi*this.renderResolution*3+yi*3+1] = xi/(this.renderResolution-1)*dimensions.x;
-                    positions[xi*this.renderResolution*3+yi*3+0] = yi/(this.renderResolution-1)*dimensions.y;
-                    positions[xi*this.renderResolution*3+yi*3+2] = z;
+                    var x = dataview1.getUint16(arrayPos1)*xDist;
+                    var y = dataview1.getUint16(arrayPos1+2)*yDist;
+                    var z = this.renderDimensions.z-dataview2.getUint16(arrayPos1)*zDist;
+                    positions[arrayPos2+0] = (xi-minX)/(this.renderResolution-1)*this.renderDimensions.x;
+                    positions[arrayPos2+1] = (yi-minY)/(this.renderResolution-1)*this.renderDimensions.y;
+                    positions[arrayPos2+2] =z;
                 }
                 else
                 {
-                    positions[xi*this.renderResolution*3+yi*3+1] = xi/(this.renderResolution-1)*dimensions.x;
-                    positions[xi*this.renderResolution*3+yi*3+0] = yi/(this.renderResolution-1)*dimensions.y;
-                    positions[xi*this.renderResolution*3+yi*3+2] = dimensions.z;
+                    positions[arrayPos2+0] = (xi-minX)/(this.renderResolution-1)*this.renderDimensions.x;
+                    positions[arrayPos2+1] = (yi-minY)/(this.renderResolution-1)*this.renderDimensions.y;
+                    positions[arrayPos2+2] = this.renderDimensions.z;
                 }
-                i = i+4;
             }
         }
     
-        this.geometryL1.verticesNeedUpdate = true;
-        this.geometryL1.attributes.position.array=positions;
+         var index = geometry.index;
+         var attributes = geometry.attributes;
+         var groups = geometry.groups;
 
-        this.geometryL1.computeBoundingBox();
-        this.geometryL1.computeFaceNormals();
-        this.geometryL1.computeVertexNormals();
-    
-    
-        var material = new THREE.MeshNormalMaterial({
-            // wireframe: true
-            side: THREE.DoubleSide,
-        });
-        var mesh = new THREE.Mesh( this.geometryL1, material);
-        mesh.name="3DWorkpiece";
-        return mesh;
+         var positions = attributes.position.array;
+         var array = attributes.normal.array;
+
+         for ( var i = 0, il = array.length; i < il; i ++ ) 
+         {
+             array[i] = 0;
+         }
+
+         var normals = attributes.normal.array;
+         var vA, vB, vC,
+
+         pA = new THREE.Vector3(),
+         pB = new THREE.Vector3(),
+         pC = new THREE.Vector3(),
+
+         cb = new THREE.Vector3(),
+         ab = new THREE.Vector3();
+
+         var indices = index.array;
+         if ( groups.length === 0 ) 
+         {
+             geometry.addGroup( 0, indices.length );
+         }
+         for ( var j = 0, jl = groups.length; j < jl; ++ j ) 
+         {
+             var group = groups[ j ];
+             var start = group.start;
+             var count = group.count;
+
+             for ( var i = start, il = start + count; i < il; i += 3 ) 
+             {
+                 vA = indices[ i + 0 ] * 3;
+                 vB = indices[ i + 1 ] * 3;
+                 vC = indices[ i + 2 ] * 3;
+
+                 pA.fromArray( positions, vA );
+                 pB.fromArray( positions, vB );
+                 pC.fromArray( positions, vC );
+
+                 cb.subVectors( pC, pB );
+                 ab.subVectors( pA, pB );
+                 cb.cross( ab );
+
+                 normals[ vA ] += cb.x;
+                 normals[ vA + 1 ] += cb.y;
+                 normals[ vA + 2 ] += cb.z;
+
+                 normals[ vB ] += cb.x;
+                 normals[ vB + 1 ] += cb.y;
+                 normals[ vB + 2 ] += cb.z;
+
+                 normals[ vC ] += cb.x;
+                 normals[ vC + 1 ] += cb.y;
+                 normals[ vC + 2 ] += cb.z;
+             }
+         }
+
+         var x, y, z, n;
+         for ( var i = 0, il = normals.length; i < il; i += 3 ) 
+         {
+             x = normals[ i ];
+             y = normals[ i + 1 ];
+             z = normals[ i + 2 ];
+             n = 1.0 / Math.sqrt( x * x + y * y + z * z );
+             normals[ i ] *= n;
+             normals[ i + 1 ] *= n;
+             normals[ i + 2 ] *= n;
+         }
+
+        attributes.position.needsUpdate = true;
+        attributes.normal.needsUpdate = true;
+        return this.mesh3D;
 	};

@@ -27,6 +27,9 @@ CWS.UI = function (controller)
 						var d = new CWS.DialogBox(title);
 						d.workpieceDimensions(controller);
 						break;
+                    case "Export File":
+                        controller.exportToOBJ();
+                        break;
 					default:
 						break;
 				}

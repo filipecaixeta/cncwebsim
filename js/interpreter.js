@@ -184,16 +184,6 @@ CWS.Interpreter.prototype.g0  = function (cmd)
 	if (this.machineType=="3D Printer" && cmd.param.a==undefined && cmd.param.e==undefined )
 		return;
 	this.outputCommands.push(l);
-	if (this.position.x<=0 && this.machineType=="Lathe")
-	{
-		var l={	x0:this.position.x,x1:0,
-		y0:this.position.y,y1:this.position.y,
-		z0:this.position.z,z1:this.L}
-
-		l.ctype=5;
-		l.cmd=cmd;
-		this.outputCommands.push(l);
-	}
 	};
 
 CWS.Interpreter.prototype.g1  = function (cmd) 
@@ -212,16 +202,6 @@ CWS.Interpreter.prototype.g1  = function (cmd)
 	l.ctype=1;
 	l.cmd=cmd;
 	this.outputCommands.push(l);
-	if (this.position.x<=0 && this.machineType=="Lathe")
-	{
-		var l={	x0:this.position.x,x1:0,
-		y0:this.position.y,y1:this.position.y,
-		z0:this.position.z,z1:10000000}
-
-		l.ctype=5;
-		l.cmd=cmd;
-		this.outputCommands.push(l);
-	}
 	};
 
 CWS.Interpreter.prototype.g2  = function (cmd) 

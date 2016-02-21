@@ -18,28 +18,44 @@ CWS.Renderer = function (id,options)
 		this.renderer.domElement.style['z-index']=41;
 
 		this.scene = new THREE.Scene();
+    
+        var ambientLight = new THREE.AmbientLight( 0x000000 );
+        this.scene.add( ambientLight );
 
-		var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );
-		this.scene.add( ambientLight );
+        var lights = [];
+        lights[0] = new THREE.PointLight( 0xffffff, 1, 0 );
+        lights[1] = new THREE.PointLight( 0xffffff, 1, 0 );
+        lights[2] = new THREE.PointLight( 0xffffff, 1, 0 );
+    
+        lights[0].position.set( 0, 200, 0 );
+        lights[1].position.set( 100, 200, 100 );
+        lights[2].position.set( -100, -200, -100 );
 
-		var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
-		directionalLight.position.x = Math.random() - 0.5;
-		directionalLight.position.y = Math.random() - 0.5;
-		directionalLight.position.z = Math.random() - 0.5;
-		directionalLight.position.normalize();
-		this.scene.add( directionalLight );
+        this.scene.add( lights[0] );
+        this.scene.add( lights[1] );
+        this.scene.add( lights[2] );
 
-		var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
-		directionalLight.position.x = Math.random() - 0.5;
-		directionalLight.position.y = Math.random() - 0.5;
-		directionalLight.position.z = Math.random() - 0.5;
-		directionalLight.position.normalize();
-		this.scene.add( directionalLight );
+//		var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );
+//		this.scene.add( ambientLight );
+
+//		var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
+//		directionalLight.position.x = Math.random() - 0.5;
+//		directionalLight.position.y = Math.random() - 0.5;
+//		directionalLight.position.z = Math.random() - 0.5;
+//		directionalLight.position.normalize();
+//		this.scene.add( directionalLight );
+//
+//		var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
+//		directionalLight.position.x = Math.random() - 0.5;
+//		directionalLight.position.y = Math.random() - 0.5;
+//		directionalLight.position.z = Math.random() - 0.5;
+//		directionalLight.position.normalize();
+//		this.scene.add( directionalLight );
 
 		this.width = options.width || 512;
 		this.height = options.height || 512;
 
-		this.camera = new THREE.PerspectiveCamera(20, this.width / this.height, 0.1, 20000);
+		this.camera = new THREE.PerspectiveCamera(20, this.width / this.height, 0.1, 2000);
 		this.camera.position.x = 0;
 		this.camera.position.y = 0;
 		this.camera.position.z = 200;

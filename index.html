@@ -13,10 +13,13 @@
     <script src="js/ace/ace.js"></script>
     <script src="js/jquery-1.12.0.min.js"></script>
     <script src="js/jquery-ui.min.js"></script> 
-    <script src="js/three.min.js"></script>
+    <script src="http://threejs.org/build/three.js"></script>
+    <script src="http://threejs.org/examples/js/libs/dat.gui.min.js"></script>
+	<script src="js/stats.min.js"></script>
 	<script src="js/OrbitControls.js"></script>
 	<script src="js/TrackballControls.js"></script>
-	<script src="js/stats.min.js"></script>
+    <script src="js/OBJExporter.js"></script>
+    <script src="js/STLBinaryExporter.js"></script>
     
     <script src="js/cws.js"></script>
 	<script src="js/storage.js"></script>
@@ -33,9 +36,10 @@
 	
 	<script type="text/javascript">
 	var motion,editor,storage,renderer,controls,stats,ui;
-
+        
 	window.addEventListener("load", (function () 
 	{
+
 		motion = new Worker("./js/motion.js");
         motion.running = false;
         motion.parameter = null;
@@ -53,6 +57,7 @@
 		editor = new CWS.CodeEditor();
 		
         controller = new CWS.Controller();
+        controller.createDatGUI();
         controller.storage = storage;
 		controller.editor = editor;
 		
@@ -88,10 +93,11 @@
 
 		renderer = new CWS.Renderer("renderer1");
 		renderer.setSize(width,height);
+        controller.renderer = renderer;
 		maincanvasdiv.appendChild(renderer.domElement);
-
+        
 		controls = new THREE.TrackballControls( renderer.camera ,renderer.domElement);
-
+        
 		controls.rotateSpeed = 5.0;
 		controls.zoomSpeed = 2;
 		controls.panSpeed = 0.8;
@@ -108,9 +114,10 @@
 			var mesh = controller.machine.create2DWorkpieceLimits();
 			renderer.updateMesh(mesh);
 			mesh = controller.machine.create2DWorkpiece();
-			renderer.updateMesh(mesh);
+			// renderer.updateMesh(mesh);
 			mesh = controller.machine.create3DWorkpiece();
 			renderer.updateMesh(mesh);
+//            mesh.material = chooseFromHash( gui, mesh, geometry );
             this.running = false;
 		};
 
@@ -191,4 +198,14 @@
 		<span title="Simulate 3D" >3D</span>
 	</div>
 </body>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-73803745-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
 </html>

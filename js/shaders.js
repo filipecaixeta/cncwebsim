@@ -26,8 +26,11 @@ CWS.SHADER["fs-lathe-3D"] =
 	"varying float vDist;\n"+
 	"void main(void) \n"+
 	"{\n"+
-	"	float r=floor(vDist/256.0);\n"+
-	"	float g=vDist-r*256.0;\n"+
+    "   float v = vDist;\n"+
+    "   if (v<0.0)\n"+
+    "       v=0.0;\n"+
+	"	float r=floor(v/256.0);\n"+
+	"	float g=v-r*256.0;\n"+
 	"	gl_FragColor = vec4(r/256.0,g/256.0,0.0,1.0);\n"+
 	"}\n";
 
@@ -131,16 +134,20 @@ CWS.SHADER["vs-mill-1-3D"] =
     "varying float yDist;\n"+
     "varying float zDist;\n"+
     "uniform vec3 dimensions;\n"+
+    "uniform float toolRadius;\n"+
     "#define maxValue 65535.0 // 2^16-1\n"+
     "void main()\n"+
     "{\n"+
-    "    float x=position.x/dimensions.x*2.0-1.0;\n"+
-    "    float y=position.y/dimensions.y*2.0-1.0;\n"+
-    "    float z=(dimensions.z-position.z)/dimensions.z*2.0-1.0;\n"+
+    "    xDist = (position.x+toolRadius)/dimensions.x;\n"+
+    "    yDist = (position.y+toolRadius)/dimensions.y;\n"+
+    "    zDist = (dimensions.z-position.z)/dimensions.z;\n"+
+    "    float x = xDist*2.0-1.0;\n"+
+    "    float y = yDist*2.0-1.0;\n"+
+    "    float z = zDist*2.0-1.0;\n"+
     "    gl_Position = vec4(x,y,z, 1.0 );\n"+
-    "    xDist = position.x/dimensions.x*maxValue;\n"+
-    "    yDist = position.y/dimensions.y*maxValue;\n"+
-    "    zDist = (z/2.0+0.5)*maxValue;\n"+
+    "    xDist = xDist*maxValue;\n"+
+    "    yDist = yDist*maxValue;\n"+
+    "    zDist = zDist*maxValue;\n"+
     "}\n";
 
 CWS.SHADER["fs-mill-1-3D"] = 
@@ -205,7 +212,8 @@ CWS.SHADER["fs-mill-2-3D"] =
     "void main(void) \n"+
     "{\n"+
     "  vec4 color = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));\n"+
-    "  if (color.a == 1.0)\n"+
+//    "  if (color.a == 1.0)\n"+
+    "  if (vTextureCoord.x*vTextureCoord.x+vTextureCoord.y*vTextureCoord.y<=1.0)\n"+
     "  {\n"+
     "    if (currentDimension==0)\n"+
     "    {\n"+

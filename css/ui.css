@@ -34,6 +34,7 @@ nav
 	position: absolute;
 	margin:20px auto;
 	width:100%;
+    margin-bottom: 0px;
 }
 nav ul 
 {
@@ -42,7 +43,7 @@ nav ul
 }
 nav > ul 
 {
-
+    margin-bottom: 0px;
 	width:100%;
 	background:#272822;
 	position:relative;
@@ -275,4 +276,17 @@ nav > ul > li > div:hover > span
     text-align: right;
     margin: 5px;
     font-size: 35px;
+}
+#gui {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    float: right;
+    z-index: 999;
+    -webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }

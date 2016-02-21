@@ -8,6 +8,7 @@ CWS.Storage = function (options)
 	{
 		options = options || {};
 		this.useCompression = (options.useCompression===undefined)?true:options.useCompression;
+        this.useLocalStorage = (options.useLocalStorage===undefined)?true:options.useLocalStorage;
 		// storage can be localStorage or a dictionary
 	    this.storage = {};
 	    this.isAvailable = false;
@@ -75,15 +76,22 @@ CWS.Storage.prototype.constructor = CWS.Storage;
 // Check if local storage is available and create
 CWS.Storage.prototype.storageAvailable = function () 
 	{
-		this.storage = window["localStorage"];
-		try 
-		{
-			var x = '__storage_test__';
-			this.storage.setItem(x, x);
-			this.storage.removeItem(x);
-			this.isAvailable = true;
-		}
-		catch(e) 
+        if (this.useLocalStorage == true)
+        {
+            this.storage = window["localStorage"];
+            try 
+            {
+                var x = '__storage_test__';
+                this.storage.setItem(x, x);
+                this.storage.removeItem(x);
+                this.isAvailable = true;
+            }
+            catch(e) 
+		    {
+                this.useLocalStorage = false;
+            }
+        }
+        if (this.useLocalStorage == false)
 		{
 			// If local storage is not available create
 			// an object with the same interface to keep

@@ -10,7 +10,7 @@ CWS.Machine = function (options)
 		this.renderResolution = options.renderResolution||64;
 		this.workpiece = options.workpiece;
 		this.machine = options.machine;
-		this.material = new THREE.MeshNormalMaterial({wireframe: false});
+		this.material3D = options.material3D;
 		this.lineColors = options.lineColors || {	g0: new THREE.Color(1,0,0),
 													g1: new THREE.Color(0,0,1),
 													g2: new THREE.Color(1,0,1),
