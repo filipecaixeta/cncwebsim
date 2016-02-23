@@ -47,6 +47,11 @@ CWS.Machine.prototype.create3DWorkpiece = function ()
 		throw new Error( "call to abstract method" );
 	};
 
+CWS.Machine.prototype.create2DWorkpieceLimits = function () 
+	{
+		return {name:"2DWorkpieceDash"};
+	};
+
 CWS.Machine.prototype.createProgram = function (gl, vertexShader, fragmentShader) 
 	{
 		function compile (shaderSource,type) 
@@ -74,3 +79,18 @@ CWS.Machine.prototype.createProgram = function (gl, vertexShader, fragmentShader
 
 	  	return shaderProgram;
 	}; 
+
+CWS.Machine.prototype.updateWorkpieceDimensions = function ()
+    {
+        
+    }
+
+CWS.Machine.prototype.updateTool = function ()
+    {
+        
+    }
+
+CWS.Machine.prototype.updateRendererResolution = function ()
+    {
+        
+    }

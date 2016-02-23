@@ -30,6 +30,10 @@ CWS.UI = function (controller)
                     case "Export File":
                         controller.exportToOBJ();
                         break;
+                    case "Tool":
+                        var d = new CWS.DialogBox(title);
+						d.tool(controller);
+                        break;
 					default:
 						break;
 				}
@@ -40,7 +44,51 @@ CWS.UI = function (controller)
 		this.elementCanvasContainer = $(document.getElementById("canvasContainer"));
 		this.elementBottomMenu = $(document.getElementById("bottomMenu"));
 		this.elementBody = $(document.body);
-	};
+		this.resize();
+		$("#saveIcon").css('color', 'green').click(function (ev) 
+		{
+			controller.save(true);
+		});
+		$("#autoRunIcon").css('color', 'green').click(function () 
+		{
+			controller.autoRun=!controller.autoRun;
+			if (controller.autoRun===false)
+				$(this).css('color','red');
+			else
+			{
+				$(this).css('color','green');
+				controller.runInterpreter(true);
+			}
+		});
+		$("#runIcon").click(function (ev) 
+		{
+			controller.runInterpreter(true);
+		});
+		$("#run2DIcon").css('color', 'green').click(function (ev) 
+		{
+			controller.run2D=!controller.run2D;
+			if (controller.run2D===false)
+				$(this).css('color','red');
+			else
+			{
+				$(this).css('color','green');
+			}
+			controller.runInterpreter();
+		});
+		$("#run3DIcon").css('color', 'green').click(function (ev) 
+		{
+			controller.run3D=!controller.run3D;
+			if (controller.run3D===false)
+				$(this).css('color','red');
+			else
+			{
+				$(this).css('color','green');
+			}
+			controller.runInterpreter();
+		});
+	}
+
+CWS.UI.prototype.constructor = CWS.UI;
 
 CWS.UI.prototype.resize = function()
 	{
@@ -57,7 +105,21 @@ CWS.UI.prototype.resize = function()
 		this.elementBottomMenu.innerWidth(width-editorWidth);
 	};
 
-CWS.UI.prototype.constructor = CWS.UI;
+CWS.UI.prototype.createStats = function (v) 
+	{
+		if (v===false)
+			return {update:function(){}};
+		var maincanvasdiv = document.getElementById("canvasContainer");
+		var width = maincanvasdiv.offsetWidth;
+		var height = maincanvasdiv.offsetHeight;
+
+		stats = new Stats();
+		stats.domElement.style.position = 'absolute';
+		stats.domElement.style.bottom = '0px';
+		stats.domElement.style.right = '0px';
+		maincanvasdiv.appendChild( stats.domElement );
+		return stats;
+	};
 
 CWS.DialogBox = function (title)
 	{
@@ -224,6 +286,24 @@ CWS.DialogBox.prototype.workpieceDimensions = function (controller)
             '  </li>'+
             '</ul></form>';
         }
+        else if (machineType=="3D Printer")
+        {
+            html = '<form id="workpieceDimensions">'+
+            '<ul>'+
+            '  <li>'+
+            '    <label for= "x" >Size X</label>'+
+            '    <input type= "text" name= "x" value="'+workpiece.x+'"/>'+
+            '  </li>'+
+            '  <li>'+
+            '    <label for= "y" >Size Y</label>'+
+            '    <input type= "text" name= "y" value="'+workpiece.y+'"/>'+
+            '  </li>'+
+            '   <li>'+
+            '    <label for= "z" >Size Z</label>'+
+            '    <input type= "text" name= "z" value="'+workpiece.z+'"/>'+
+            '  </li>'+
+            '</ul></form>';
+        }
 		this.dialog.append($(html));
 		this.dialog.dialog(
 	      {
@@ -247,4 +327,68 @@ CWS.DialogBox.prototype.workpieceDimensions = function (controller)
 	            }
 	        }
 	      });
+	};
+
+CWS.DialogBox.prototype.tool = function (controller)
+	{
+		var machineType = controller.getMachineType();
+		if (machineType!="Mill")
+		{
+			var html = 	'<ul><li>'+machineType+' does not support tool settings</li></ul>';
+			this.dialog.append($(html));
+			this.dialog.dialog(
+		      {
+		      width: 400,
+		      buttons: 
+		        {
+		            "Ok": function()
+		            {
+		              	$(this).dialog("close");
+		            },
+		          	"Cancel": function()
+		            {
+	          			$(this).dialog("close");
+		            }
+		        }
+		      });
+		}
+		else
+		{
+			var machine = controller.getMachine();
+			var html = 	'<form id="menuTool">'+
+						'<ul>'+
+						'  <li>'+
+						'    <label for= "toolradius" >Tool radius</label>'+
+						'    <input type= "text" name= "toolradius" value="'+machine.tool.radius+'"/>'+
+						'  </li>'+
+						'  <li>'+
+						'    <label for= "toolangle" >Tool angle</label>'+
+						'    <input type= "text" name= "toolangle" value="'+machine.tool.angle+'"/>'+
+						'  </li>'+
+						'</ul>'+
+						'</form>';
+			this.dialog.append($(html));
+			this.dialog.dialog(
+		      {
+		      width: 400,
+		      buttons: 
+		        {
+		            "Save": function()
+		            {
+		            	var values = {};
+		            	var result = $(this.firstChild).serializeArray();
+		            	for (var i = 0; i < result.length; i++) 
+		            	{
+		            		values[result[i].name]=result[i].value;
+		            	}
+		              	controller.setMachineTool(values);
+		              	$(this).dialog("close");
+		            },
+		          	"Cancel": function()
+		            {
+	          			$(this).dialog("close");
+		            }
+		        }
+		      });
+		}
 	};

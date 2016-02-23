@@ -245,6 +245,8 @@ CWS.Lathe.prototype.create2DWorkpieceLimits = function ()
 
 CWS.Lathe.prototype.create2DWorkpiece = function () 
 	{
+		if (!this.motionData.run2D)
+            return {name:"2DWorkpiece"};
 		var geometry = new THREE.BufferGeometry();
 		geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0,0,0),99999);
         geometry.addAttribute( 'position', new THREE.BufferAttribute( this.motionData.positions, 3 ) );
@@ -259,6 +261,8 @@ CWS.Lathe.prototype.create2DWorkpiece = function ()
 
 CWS.Lathe.prototype.create3DWorkpiece = function () 
 	{
+		if (!this.motionData.run3D)
+            return {name:"3DWorkpiece"};
 		var radius = this.workpiece.x/2.0;
 
 		this.gl.useProgram(this.shaderProgram);

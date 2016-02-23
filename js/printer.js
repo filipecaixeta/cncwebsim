@@ -27,6 +27,8 @@ CWS.Printer.prototype.initMesh = function ()
 
 CWS.Printer.prototype.create2DWorkpiece = function () 
 	{
+		if (!this.motionData.run2D)
+			return {name:"2DWorkpiece"};
 		var geometry = new THREE.BufferGeometry();
 		geometry.addAttribute( 'position', new THREE.BufferAttribute( this.motionData.positions, 3 ) );
 		geometry.addAttribute( 'vcolor', new THREE.BufferAttribute( this.motionData.color, 1 ) );
@@ -39,13 +41,13 @@ CWS.Printer.prototype.create2DWorkpiece = function ()
 
 CWS.Printer.prototype.create2DWorkpieceLimits = function () 
 	{
-		line = {};
-		line.name="2DWorkpieceDash";
-		return line;
+		return {name:"2DWorkpieceDash"};
 	};
 
 CWS.Printer.prototype.create3DWorkpiece = function () 
 {
+	if (!this.motionData.run3D || this.motionData.triangles.length===0)
+		return {name:"3DWorkpiece"};
 	var geometry = this.mesh3D.geometry;
 	geometry.attributes.position.array = this.motionData.triangles;
 	geometry.attributes.position.needsUpdate = true;

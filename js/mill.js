@@ -7,7 +7,7 @@ CWS.Mill = function (options)
 		options = options || {};
 		CWS.Machine.call( this, options );
 
-		this.tool = {radius:2.5,angle:70};
+		this.tool = this.machine.tool;
 
 		this.canvas = null;
 		this.gl = null;
@@ -214,6 +214,8 @@ CWS.Mill.prototype.setRendererResolution = function (renderResolution)
 
 CWS.Mill.prototype.create2DWorkpiece = function () 
 	{
+        if (!this.motionData.run2D)
+            return {name:"2DWorkpiece"};
 		var geometry = new THREE.BufferGeometry();
 		geometry.addAttribute( 'position', new THREE.BufferAttribute( this.motionData.positions, 3 ) );
 		geometry.addAttribute( 'vcolor', new THREE.BufferAttribute( this.motionData.color, 1 ) );
@@ -337,6 +339,8 @@ CWS.Mill.prototype.calculatePositionAndTexture = function(dimensions,toolRadius)
 
 CWS.Mill.prototype.create3DWorkpiece = function () 
 	{	
+        if (!this.motionData.run3D)
+            return {name:"3DWorkpiece"};
         // this.toolTexture = this.createToolTexture(32,this.tool.angle);
         var dimensions = this.workpiece;
     

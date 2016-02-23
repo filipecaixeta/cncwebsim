@@ -147,7 +147,7 @@ CWS.Interpreter.prototype.s0  = function (cmd)
 	if (this.machineType!='3D Printer')
 	{
 		if (cmd.param.s<0)
-			throw new ErrorParser(cmd.line.lineNumber,"Wrong S number. S cannot be a negative number",cmd.line.rawLine);
+			throw new CWS.ErrorParser(cmd.line.lineNumber,"Wrong S number. S cannot be a negative number",cmd.line.rawLine);
 		else
 			this.spindle_speed=cmd.param.s;
 	};
@@ -220,7 +220,7 @@ CWS.Interpreter.prototype.g2  = function (cmd)
 		var d2=x*x+y*y;
 		var h_x2_div_d = 4.0*cmd.param.r*cmd.param.r-x*x-y*y;
 		if (h_x2_div_d < 0)
-			throw new ErrorParser(cmd.line.lineNumber,"Wrong radius",cmd.line.rawLine);
+			throw new CWS.ErrorParser(cmd.line.lineNumber,"Wrong radius",cmd.line.rawLine);
 		h_x2_div_d = Math.sqrt(h_x2_div_d)/Math.sqrt(d2)*this.invertRadius;
 		// // Invert the sign of h_x2_div_d if the circle is counter clockwise (see sketch below)
 		// if (gc_block.modal.motion == MOTION_MODE_CCW_ARC) { h_x2_div_d = -h_x2_div_d; }  
@@ -343,7 +343,7 @@ CWS.Interpreter.prototype.g3  = function (cmd)
 		var d2=x*x+y*y;
 		var h_x2_div_d = 4.0*cmd.param.r*cmd.param.r-x*x-y*y;
 		if (h_x2_div_d < 0)
-			throw new ErrorParser(cmd.line.lineNumber,"Wrong radius",cmd.line.rawLine);
+			throw new CWS.ErrorParser(cmd.line.lineNumber,"Wrong radius",cmd.line.rawLine);
 		h_x2_div_d = -Math.sqrt(h_x2_div_d)/Math.sqrt(d2)*this.invertRadius;
 		// // Invert the sign of h_x2_div_d if the circle is counter clockwise (see sketch below)
 		// if (gc_block.modal.motion == MOTION_MODE_CCW_ARC) { h_x2_div_d = -h_x2_div_d; }  
@@ -465,14 +465,14 @@ CWS.Interpreter.prototype.g10 = function (cmd)
 	if (l==1)
 	{
 		if (this.toolTable[p] === undefined)
-			throw new ErrorParser(cmd.line.lineNumber,"Wrong G10 L1. Invalid P word",cmd.line.rawLine);
+			throw new CWS.ErrorParser(cmd.line.lineNumber,"Wrong G10 L1. Invalid P word",cmd.line.rawLine);
 		for (var k in cmd.param)
 			this.toolTable[p][k]=cmd.param[k];
 	}
 	else if(l==2)
 	{
 		if (p<0 || p>6)
-			throw new ErrorParser(cmd.line.lineNumber,"Wrong G10 L2. Invalid P word",cmd.line.rawLine);
+			throw new CWS.ErrorParser(cmd.line.lineNumber,"Wrong G10 L2. Invalid P word",cmd.line.rawLine);
 		for (var k in cmd.param)
 			this.coordinateSystemTable[p][k]=cmd.param[k];
 	}
@@ -571,7 +571,7 @@ CWS.Interpreter.prototype.g54 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
-		throw new ErrorParser(this.lineNumber,"Wrong G54. Cutter compensation is on",this.rawLine);
+		throw new CWS.ErrorParser(this.lineNumber,"Wrong G54. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[1];
 	};
 
@@ -579,7 +579,7 @@ CWS.Interpreter.prototype.g55 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
-		throw new ErrorParser(this.lineNumber,"Wrong G55. Cutter compensation is on",this.rawLine);
+		throw new CWS.ErrorParser(this.lineNumber,"Wrong G55. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[2];
 	};
 
@@ -587,7 +587,7 @@ CWS.Interpreter.prototype.g56 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
-		throw new ErrorParser(this.lineNumber,"Wrong G56. Cutter compensation is on",this.rawLine);
+		throw new CWS.ErrorParser(this.lineNumber,"Wrong G56. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[3];
 	};
 
@@ -595,7 +595,7 @@ CWS.Interpreter.prototype.g57 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
-		throw new ErrorParser(this.lineNumber,"Wrong G57. Cutter compensation is on",this.rawLine);
+		throw new CWS.ErrorParser(this.lineNumber,"Wrong G57. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[4];
 	};
 
@@ -603,7 +603,7 @@ CWS.Interpreter.prototype.g58 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
-		throw new ErrorParser(this.lineNumber,"Wrong G58. Cutter compensation is on",this.rawLine);
+		throw new CWS.ErrorParser(this.lineNumber,"Wrong G58. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[5];
 	};
 
@@ -611,7 +611,7 @@ CWS.Interpreter.prototype.g59 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
-		throw new ErrorParser(this.lineNumber,"Wrong G59. Cutter compensation is on",this.rawLine);
+		throw new CWS.ErrorParser(this.lineNumber,"Wrong G59. Cutter compensation is on",this.rawLine);
 	this.settings.coord_system=this.coordinateSystemTable[6];
 	};
 
@@ -756,3 +756,17 @@ CWS.Interpreter.prototype.m109 = function (cmd)
 	{
 	// body...
 	}
+
+// Creates an error object for the parser
+CWS.ErrorParser = function (line,message,data) 
+  {
+    this.line = line;
+    this.message = message;
+    this.data = data;
+  };
+// Returns a string form of the error.
+CWS.ErrorParser.prototype.toString = function ()
+  {
+    return "Error on line: "+this.line
+    throw "Error on line "+this.line+": "+this.message+"\n"+this.data;
+  };

@@ -30,7 +30,7 @@ CWS.Parser.prototype.getCommand = function()
 CWS.Parser.prototype.parseLine = function(line) 
   {
       var gline = new CWS.GLine(line);
-      gline.lineNumber = this.glines.length;
+      gline.lineNumber = this.glines.length+1;
       gline.processLine();
       this.glines.push(gline);  
   };

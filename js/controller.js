@@ -2,12 +2,61 @@
  * @author Filipe Caixeta / http://filipecaixeta.com.br/
  */
 
-CWS.Controller = function () 
+CWS.Controller = function (editor,storage,renderer,motion,autoRun) 
 	{
-		this.storage = null;
-		this.editor = null;
-		this.machine = null;
-	};
+		this.storage = storage;
+		this.editor = editor;
+		this.renderer = renderer;
+        this.motion = motion;
+        this.motion.setController(this);
+        this.saveFlag = 0;
+        this.autoRun = false;
+        this.run3D = true;
+        this.run2D = true;
+
+        this.createDatGUI();
+        // Init the storage
+        if (this.storage.isFirstRun)
+            {
+                this.createProject({projectName:"Untitled",machineType:"Lathe"});
+            }
+        else
+            {
+                this.openProject(this.storage.header.name);
+            }
+        // Init the editor
+        var controller = this;
+        this.editor.subscribeToCodeChanged(function (code,ev) 
+        {
+            controller.save();
+        });
+        this.editor.subscribeToCodeChanged(function (code,ev) 
+        {
+            controller.runInterpreter();
+        });
+        // Add the renderer to the container
+        document.getElementById("canvasContainer").appendChild(renderer.domElement);
+        // Create controls
+        this.controls = new THREE.TrackballControls( this.renderer.camera ,this.renderer.domElement);
+        this.controls.rotateSpeed = 5.0;
+        this.controls.zoomSpeed = 2;
+        this.controls.panSpeed = 0.8;
+        this.controls.noZoom = false;
+        this.controls.noPan = false;
+        this.controls.staticMoving = true;
+        this.controls.dynamicDampingFactor = 0.3;
+        // Set renderer size
+        this.windowResize();
+        // Save changes every 5 seconds
+        setInterval(function () 
+            {
+                if (controller.saveFlag===0)
+                    return;
+                controller.saveFlag = Infinity;
+                controller.save(); 
+            }, 5000);
+        this.autoRun = autoRun;
+    };
 
 CWS.Controller.prototype.constructor = CWS.Controller;
 
@@ -28,70 +77,46 @@ CWS.Controller.prototype.listProjects = function()
 CWS.Controller.prototype.openProject = function(projectName)
 	{
 		this.storage.loadProject(projectName,true);
-        if (this.storage.machineType=="Lathe")
-		{
-            document.getElementById('machineIcon').className = "icon-lathe";
-			this.machine = new CWS.Lathe({
-				machine: this.storage.machine,
-                material3D: this.material3D,
-				workpiece: this.storage.workpiece,
-				renderResolution: 512});
-		}
-		else if (this.storage.machineType=="Mill")
-		{
-            document.getElementById('machineIcon').className = "icon-mill";
-			this.machine = new CWS.Mill({
-				machine: this.storage.machine,
-                material3D: this.material3D,
-				workpiece: this.storage.workpiece,
-				renderResolution: 512});
-		}
-		else if (this.storage.machineType=="3D Printer")
-		{
-			document.getElementById('machineIcon').className = "icon-printer";
-            this.machine = new CWS.Printer({
-				machine: this.storage.machine,
-                material3D: this.material3D,
-				workpiece: this.storage.workpiece});
-		}
+        this.loadMachine();
 		this.editor.setCode(this.storage.code);
 	};
 
-CWS.Controller.prototype.openMachine = function(machine)
-	{
-		if (machine=="Lathe")
-		{
-			this.storage.machine = CWS.Project.createDefaultMachine(machine);
-            this.storage.workpiece = CWS.Project.createDefaultWorkpiece(machine);
+CWS.Controller.prototype.loadMachine = function()
+    {
+        if (this.storage.machineType=="Lathe")
+        {
             document.getElementById('machineIcon').className = "icon-lathe";
-			this.machine = new CWS.Lathe({
-				machine: this.storage.machine,
-				workpiece: this.storage.workpiece,
+            this.machine = new CWS.Lathe({
+                machine: this.storage.machine,
                 material3D: this.material3D,
-				renderResolution: 512});
-		}
-		else if (machine=="Mill")
-		{
-			this.storage.machine = CWS.Project.createDefaultMachine(machine);
-            this.storage.workpiece = CWS.Project.createDefaultWorkpiece(machine);
+                workpiece: this.storage.workpiece,
+                renderResolution: 512});
+        }
+        else if (this.storage.machineType=="Mill")
+        {
             document.getElementById('machineIcon').className = "icon-mill";
-			this.machine = new CWS.Mill({
-				machine: this.storage.machine,
-				workpiece: this.storage.workpiece,
+            this.machine = new CWS.Mill({
+                machine: this.storage.machine,
                 material3D: this.material3D,
-				renderResolution: 512});
-		}
-		else if (machine=="3D Printer")
-		{
-            this.storage.machine = CWS.Project.createDefaultMachine(machine);
-            this.storage.workpiece = CWS.Project.createDefaultWorkpiece(machine);
-			document.getElementById('machineIcon').className = "icon-printer";
+                workpiece: this.storage.workpiece,
+                renderResolution: 512});
+        }
+        else if (this.storage.machineType=="3D Printer")
+        {
+            document.getElementById('machineIcon').className = "icon-printer";
             this.machine = new CWS.Printer({
-				machine: this.storage.machine,
+                machine: this.storage.machine,
                 material3D: this.material3D,
-				workpiece: this.storage.workpiece});
-		}
-        this.runGCode();
+                workpiece: this.storage.workpiece});
+        }
+    };
+
+CWS.Controller.prototype.openMachine = function(machine)
+    {
+		this.storage.machine = CWS.Project.createDefaultMachine(machine);
+        this.storage.workpiece = CWS.Project.createDefaultWorkpiece(machine);
+        this.loadMachine();
+        this.runInterpreter();
 	};
 
 CWS.Controller.prototype.workpieceDimensions = function(dimensions)
@@ -103,6 +128,19 @@ CWS.Controller.prototype.getMachineType = function()
 	{
 		return this.storage.machineType;
 	};
+
+CWS.Controller.prototype.getMachine = function()
+    {
+        return this.storage.machine;
+    };
+
+CWS.Controller.prototype.setMachineTool = function(tool)
+    {
+        this.storage.machine.tool.radius = parseFloat(tool['toolradius']);
+        this.storage.machine.tool.angle = parseFloat(tool['toolangle']);
+        this.machine.updateTool();
+        this.updateWorkpieceDraw();
+    };
 
 CWS.Controller.prototype.getWorkpiece = function()
 	{
@@ -118,7 +156,10 @@ CWS.Controller.prototype.setWorkpieceDimensions = function(dimensions)
         }
         this.storage.workpiece = workpiece;
         this.machine.updateWorkpieceDimensions();
-        this.runGCode();
+        if (this.machine.mtype=="3D Printer")
+            this.runInterpreter();
+        else
+            this.updateWorkpieceDraw();
 	};
 
 CWS.Controller.prototype.exportToOBJ = function()
@@ -198,4 +239,65 @@ CWS.Controller.prototype.createDatGUI = function ()
 CWS.Controller.prototype.runGCode = function()
     {
         this.editor.codeChanged();
+    };
+
+CWS.Controller.prototype.setEditor = function()
+    {
+        this.editor.codeChanged();
+    };
+
+CWS.Controller.prototype.windowResize = function()
+    {
+        var maincanvasdiv = document.getElementById("canvasContainer");
+        this.controls.handleResize();
+        this.renderer.setSize(maincanvasdiv.offsetWidth,maincanvasdiv.offsetHeight);
+    };
+
+CWS.Controller.prototype.render = function()
+    {
+        this.controls.update();
+        this.renderer.render();
+    };
+
+CWS.Controller.prototype.save = function(forceSave)
+    {
+        // Set the number of changes to save the code
+        var changes = 5;
+        if (forceSave===true)
+            this.saveFlag=Infinity;    
+        this.saveFlag++;
+        // Don't save
+        if (this.saveFlag<changes)
+        {
+            $("#saveIcon").css('color', 'red');
+        }
+        // Save
+        else
+        {
+            $("#saveIcon").css('color', 'green');
+            this.saveFlag=0;
+            this.storage.code = this.editor.getCode();
+        }
+    };
+
+CWS.Controller.prototype.runInterpreter = function(forceRun)
+    {
+        if (this.autoRun===false && forceRun!==true)
+            return;
+        var code = this.editor.getCode();
+        this.motion.setData({ header:this.storage.header,
+                                code:code,
+                                run3D:this.run3D,run2D:this.run2D});
+        this.motion.run();
+    };
+
+CWS.Controller.prototype.updateWorkpieceDraw = function()
+    {
+        var mesh;
+        mesh = this.machine.create2DWorkpieceLimits();
+        this.renderer.updateMesh(mesh);
+        mesh = this.machine.create2DWorkpiece();
+        this.renderer.updateMesh(mesh);
+        mesh = this.machine.create3DWorkpiece();
+        this.renderer.updateMesh(mesh);
     };

@@ -9,17 +9,17 @@
     <link rel="stylesheet" type="text/css" href="css/fontIcon.css">
     <link rel="stylesheet" type="text/css" href="css/ui.css">
     <title>CNC Web Simulator</title>
-    <script src="js/lz-string.min.js"></script>
-    <script src="js/ace/ace.js"></script>
-    <script src="js/jquery-1.12.0.min.js"></script>
-    <script src="js/jquery-ui.min.js"></script> 
-    <script src="http://threejs.org/build/three.js"></script>
-    <script src="http://threejs.org/examples/js/libs/dat.gui.min.js"></script>
-	<script src="js/stats.min.js"></script>
-	<script src="js/OrbitControls.js"></script>
-	<script src="js/TrackballControls.js"></script>
-    <script src="js/OBJExporter.js"></script>
-    <script src="js/STLBinaryExporter.js"></script>
+    <script src="js/libs/lz-string.min.js"></script>
+    <script src="js/libs/ace/ace.js"></script>
+    <script src="js/libs/jquery-1.12.0.min.js"></script>
+    <script src="js/libs/jquery-ui.min.js"></script> 
+    <script src="js/libs/three.js"></script>
+    <script src="js/libs/dat.gui.min.js"></script>
+	<script src="js/libs/stats.min.js"></script>
+	<script src="js/libs/OrbitControls.js"></script>
+	<script src="js/libs/TrackballControls.js"></script>
+    <script src="js/libs/OBJExporter.js"></script>
+    <script src="js/libs/STLBinaryExporter.js"></script>
     
     <script src="js/cws.js"></script>
 	<script src="js/storage.js"></script>
@@ -31,116 +31,46 @@
 	<script src="js/lathe.js"></script>
     <script src="js/mill.js"></script>
     <script src="js/printer.js"></script>
+    <script src="js/motion.js"></script>
 	<script src="js/controller.js"></script>
 	<script src="js/ui.js"></script>
 	
 	<script type="text/javascript">
-	var motion,editor,storage,renderer,controls,stats,ui;
-        
+	var controller,ui;
+	// TODO
+	// 3D Printer filament
+	// Camera automatic
+
 	window.addEventListener("load", (function () 
 	{
-
-		motion = new Worker("./js/motion.js");
-        motion.running = false;
-        motion.parameter = null;
-        motion.run = function ()
-        {
-            if (this.running==false && this.parameter!==null)
-            {
-                this.running=true;
-                this.postMessage(this.parameter);
-                this.parameter = null;
-            }
-        };
-		
-		storage = new CWS.Storage({useCompression:true,useLocalStorage:true});		
-		editor = new CWS.CodeEditor();
-		
-        controller = new CWS.Controller();
-        controller.createDatGUI();
-        controller.storage = storage;
-		controller.editor = editor;
-		
-        if (storage.isFirstRun)
-            {
-                controller.createProject({projectName:"Untitled",machineType:"Lathe"});
-            }
-        else
-            {
-                controller.openProject(storage.header.name);
-            }
+        controller = new CWS.Controller(
+        	new CWS.CodeEditor(),
+        	new CWS.Storage({useCompression:true,useLocalStorage:true}),
+        	new CWS.Renderer("renderer1"),
+        	new CWS.Motion(),
+        	true
+        	);
 		
 		ui = new CWS.UI(controller);
-		ui.resize();
-
-		editor.subscribeToCodeChanged(function (code,ev) {
-			if (code!="")
-				storage.code = code;
-		});
-		editor.subscribeToCodeChanged(function (code,ev) {
-             motion.parameter = {header:storage.header,code:code};
-		});
-
-		var maincanvasdiv = document.getElementById("canvasContainer");
-		var width = maincanvasdiv.offsetWidth;
-		var height = maincanvasdiv.offsetHeight;
-
-		stats = new Stats();
-		stats.domElement.style.position = 'absolute';
-		stats.domElement.style.bottom = '0px';
-		stats.domElement.style.right = '0px';
-		maincanvasdiv.appendChild( stats.domElement );
-
-		renderer = new CWS.Renderer("renderer1");
-		renderer.setSize(width,height);
-        controller.renderer = renderer;
-		maincanvasdiv.appendChild(renderer.domElement);
-        
-		controls = new THREE.TrackballControls( renderer.camera ,renderer.domElement);
-        
-		controls.rotateSpeed = 5.0;
-		controls.zoomSpeed = 2;
-		controls.panSpeed = 0.8;
-
-		controls.noZoom = false;
-		controls.noPan = false;
-
-		controls.staticMoving = true;
-		controls.dynamicDampingFactor = 0.3;
-
-		motion.onmessage = function(e) 
-		{
-			controller.machine.setMotion(e.data);
-			var mesh = controller.machine.create2DWorkpieceLimits();
-			renderer.updateMesh(mesh);
-			mesh = controller.machine.create2DWorkpiece();
-			renderer.updateMesh(mesh);
-			mesh = controller.machine.create3DWorkpiece();
-			renderer.updateMesh(mesh);
-//            mesh.material = chooseFromHash( gui, mesh, geometry );
-            this.running = false;
-		};
+		var stats = ui.createStats(true);
 
 		function onWindowResize() 
 		{
+			controller.windowResize();
 			ui.resize();
-			renderer.setSize(maincanvasdiv.offsetWidth,maincanvasdiv.offsetHeight);
-			controls.handleResize();
 		}
 
-		window.addEventListener( 'resize', onWindowResize, false );
-	
 		function animate() 
 		{
 			requestAnimationFrame( animate );
-            motion.run();
-			controls.update();
 			stats.update();
-			renderer.render();
+			controller.motion.run();
+			controller.render();
 		}
 		animate();
-        editor.codeChanged();
 
+		window.addEventListener( 'resize', onWindowResize, false );
+		controller.runInterpreter();
 	}),true);
 </script>
 </head>
@@ -167,6 +97,7 @@
 					<ul>
 						<li><div title="Open Machine">Open Machine</div></li>
 						<li><div title="Machine Settings" class="notImplemented">Machine Settings</div></li>
+						<li><div title="Tool">Tool</div></li>
 					</ul>
 				</li>
 				<li><div><span title="Workpiece" class="icon icon-codepen"></span>Workpiece</div>
@@ -191,12 +122,11 @@
 	<div id="canvasContainer">
 	</div>
 	<div id="bottomMenu">
-		<span title="Run" class="icon-play3"></span>
-		<span title="Pause" class="icon-pause2"></span>
-		<span title="Stop" class="icon-stop2"></span>
-		<span title="Step" class="icon-forward3"></span>
-		<span title="Simulate 2D" >2D</span>
-		<span title="Simulate 3D" >3D</span>
+		<span title="Run" id="runIcon" class="icon-play3"></span>
+		<span title="Auto Run" id="autoRunIcon" class="icon-spinner9"></span>
+		<span title="Save" id="saveIcon" class="icon-floppy-disk"></span>
+		<span title="Simulate 2D" id="run2DIcon" >2D</span>
+		<span title="Simulate 3D" id="run3DIcon" >3D</span>
 	</div>
 </body>
     <script>
