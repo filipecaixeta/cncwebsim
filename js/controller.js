@@ -19,10 +19,10 @@ CWS.Controller = function (editor,storage,renderer,motion,autoRun)
         this.controls = new THREE.TrackballControls( this.renderer.camera ,this.renderer.domElement);
         this.controls.rotateSpeed = 5.0;
         this.controls.zoomSpeed = 2;
-        this.controls.panSpeed = 0.8;
+        this.controls.panSpeed = 0.4;
         this.controls.noZoom = false;
         this.controls.noPan = false;
-        this.controls.staticMoving = true;
+        this.controls.staticMoving = false;
         this.controls.dynamicDampingFactor = 0.3;
         // Init the storage
         if (this.storage.isFirstRun)
