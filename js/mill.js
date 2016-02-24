@@ -12,7 +12,8 @@ CWS.Mill = function (options)
 		this.canvas = null;
 		this.gl = null;
         this.debug = false;
-    
+        this.mtype="Mill";
+
         this.initWebGL();
         this.initMesh();
 	}
@@ -222,6 +223,9 @@ CWS.Mill.prototype.create2DWorkpiece = function ()
 		geometry.computeBoundingSphere();
 		var mesh = new THREE.Line( geometry, this.material2D );
 		mesh.name="2DWorkpiece";
+        mesh.position.x = -this.workpiece.x/2;
+        mesh.position.y = -this.workpiece.y/2;
+        mesh.position.z = -this.workpiece.z/2;
 		return mesh;
 	};
 
@@ -249,6 +253,9 @@ CWS.Mill.prototype.create2DWorkpieceLimits = function ()
 		var lineMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 1 } );
 		var line = new THREE.LineSegments( lineGeometry, lineMaterial );
 		line.name="2DWorkpieceDash";
+        line.position.x = -this.workpiece.x/2;
+        line.position.y = -this.workpiece.y/2;
+        line.position.z = -this.workpiece.z/2;
 		return line;
 	};
 
@@ -486,5 +493,8 @@ CWS.Mill.prototype.create3DWorkpiece = function ()
 
         attributes.position.needsUpdate = true;
         attributes.normal.needsUpdate = true;
+        this.mesh3D.position.x = -this.workpiece.x/2;
+        this.mesh3D.position.y = -this.workpiece.y/2;
+        this.mesh3D.position.z = -this.workpiece.z/2;
         return this.mesh3D;
 	};

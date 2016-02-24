@@ -1,10 +1,10 @@
 <html>
 <head>
 	<meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="google" content="nositelinkssearchbox" />
     <meta name="description" content="CNC Web Simulator, an open source CNC simulator for web browser. It can simulate lathe, mill and 3D printers." />
-    
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="stylesheet" type="text/css" href="css/jquery-ui.structure.css">
     <link rel="stylesheet" type="text/css" href="css/fontIcon.css">
     <link rel="stylesheet" type="text/css" href="css/ui.css">
@@ -14,7 +14,7 @@
     <script src="js/libs/jquery-1.12.0.min.js"></script>
     <script src="js/libs/jquery-ui.min.js"></script> 
     <script src="js/libs/three.js"></script>
-    <script src="js/libs/dat.gui.min.js"></script>
+    <script src="js/libs/dat.gui.js"></script>
 	<script src="js/libs/stats.min.js"></script>
 	<script src="js/libs/OrbitControls.js"></script>
 	<script src="js/libs/TrackballControls.js"></script>
@@ -39,8 +39,9 @@
 	var controller,ui;
 	// TODO
 	// 3D Printer filament
-	// Camera automatic
-
+	// Lathe tool
+	// Display error
+	// Touggle workpiecelimits
 	window.addEventListener("load", (function () 
 	{
         controller = new CWS.Controller(

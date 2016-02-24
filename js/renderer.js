@@ -58,9 +58,11 @@ CWS.Renderer = function (id,options)
 		this.camera = new THREE.PerspectiveCamera(20, this.width / this.height, 0.1, 2000);
 		this.camera.position.x = 0;
 		this.camera.position.y = 0;
-		this.camera.position.z = 200;
+		this.camera.position.z = 100;
 		this.camera.lookAt( this.scene.position );
 	}
+
+
 
 CWS.Renderer.prototype.constructor = CWS.Renderer;
 
@@ -74,6 +76,43 @@ CWS.Renderer.prototype =
 	    {
 	        this.renderer.domElement = val;
 	    },
+	};
+
+CWS.Renderer.prototype.lookAtLathe = function (dimensions)
+	{
+		var aspect = this.camera.aspect;
+		var fov = 20;
+		var distance = dimensions.y/2/Math.tan( (fov/2)  * (Math.PI/180)  );
+		var cameraPosition = new THREE.Vector3(0,0,distance);
+		this.camera.position.copy( cameraPosition );
+		this.camera.far = 20*Math.max(dimensions.x,dimensions.y);
+		this.camera.near = 0.05*Math.max(dimensions.x,dimensions.y);
+		this.camera.updateProjectionMatrix();
+	};
+
+CWS.Renderer.prototype.lookAtMill = function (dimensions)
+	{
+		var aspect = this.camera.aspect;
+		var fov = 20;
+		var distance = Math.max(dimensions.x,dimensions.y)/2/Math.tan( (fov/2)  * (Math.PI/180)  );
+		var cameraPosition = new THREE.Vector3(0,0,distance);
+		this.camera.position.copy( cameraPosition );
+		this.camera.far = 20*Math.max(dimensions.x,dimensions.y);
+		this.camera.near = 0.05*Math.max(dimensions.x,dimensions.y);
+		this.camera.updateProjectionMatrix();
+	};
+
+CWS.Renderer.prototype.lookAt3DPrinter = function (center,radius)
+	{
+		if (!center || !radius)
+			return;
+
+		var distance =(center.z+radius)/2/Math.tan( (20/2)  * (Math.PI/180)  );
+		var cameraPosition = new THREE.Vector3(0,0,distance);
+		this.camera.position.copy( cameraPosition );
+		this.camera.far = 2000;
+		this.camera.near = 0.1;
+		this.camera.updateProjectionMatrix();
 	};
 
 CWS.Renderer.prototype.setCamera = function (camera)

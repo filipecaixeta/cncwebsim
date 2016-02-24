@@ -11,6 +11,7 @@ CWS.Lathe = function (options)
         this.segments = 60;
 		this.canvas = null;
 		this.gl = null;
+		this.mtype="Lathe";
 
 		this.initWebGL();
         this.initLatheGeometry();
@@ -240,6 +241,7 @@ CWS.Lathe.prototype.create2DWorkpieceLimits = function ()
 		line.name="2DWorkpieceDash";
 		line.rotation.x=Math.PI/2;
 		line.rotation.y=Math.PI/2;
+		line.position.x = -this.workpiece.z/2;
 		return line;
 	};
 
@@ -256,6 +258,7 @@ CWS.Lathe.prototype.create2DWorkpiece = function ()
 		mesh.name="2DWorkpiece";
 		mesh.rotation.x=Math.PI/2;
 		mesh.rotation.y=Math.PI/2;
+		mesh.position.x = -this.workpiece.z/2;
 		return mesh;
 	};
 
@@ -309,5 +312,6 @@ CWS.Lathe.prototype.create3DWorkpiece = function ()
 			this.dataLevel1[i/4]=0;
 		};
         this.generateLatheGeometry();
+        this.mesh3D.position.x = -this.workpiece.z/2;
 		return this.mesh3D;
 	};

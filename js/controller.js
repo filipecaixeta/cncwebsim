@@ -15,6 +15,15 @@ CWS.Controller = function (editor,storage,renderer,motion,autoRun)
         this.run2D = true;
 
         this.createDatGUI();
+        // Create controls
+        this.controls = new THREE.TrackballControls( this.renderer.camera ,this.renderer.domElement);
+        this.controls.rotateSpeed = 5.0;
+        this.controls.zoomSpeed = 2;
+        this.controls.panSpeed = 0.8;
+        this.controls.noZoom = false;
+        this.controls.noPan = false;
+        this.controls.staticMoving = true;
+        this.controls.dynamicDampingFactor = 0.3;
         // Init the storage
         if (this.storage.isFirstRun)
             {
@@ -36,15 +45,6 @@ CWS.Controller = function (editor,storage,renderer,motion,autoRun)
         });
         // Add the renderer to the container
         document.getElementById("canvasContainer").appendChild(renderer.domElement);
-        // Create controls
-        this.controls = new THREE.TrackballControls( this.renderer.camera ,this.renderer.domElement);
-        this.controls.rotateSpeed = 5.0;
-        this.controls.zoomSpeed = 2;
-        this.controls.panSpeed = 0.8;
-        this.controls.noZoom = false;
-        this.controls.noPan = false;
-        this.controls.staticMoving = true;
-        this.controls.dynamicDampingFactor = 0.3;
         // Set renderer size
         this.windowResize();
         // Save changes every 5 seconds
@@ -83,6 +83,7 @@ CWS.Controller.prototype.openProject = function(projectName)
 
 CWS.Controller.prototype.loadMachine = function()
     {
+        // this.renderer.camera.target=new THREE.Vector3(0.0,0.0,0.0);
         if (this.storage.machineType=="Lathe")
         {
             document.getElementById('machineIcon').className = "icon-lathe";
@@ -91,6 +92,8 @@ CWS.Controller.prototype.loadMachine = function()
                 material3D: this.material3D,
                 workpiece: this.storage.workpiece,
                 renderResolution: 512});
+            this.renderer.lookAtLathe({x:this.storage.workpiece.x,y:this.storage.workpiece.z});
+            // this.controls.target.set(this.storage.workpiece.x, 0, 0);
         }
         else if (this.storage.machineType=="Mill")
         {
@@ -100,6 +103,8 @@ CWS.Controller.prototype.loadMachine = function()
                 material3D: this.material3D,
                 workpiece: this.storage.workpiece,
                 renderResolution: 512});
+            this.renderer.lookAtMill({x:this.storage.workpiece.x,
+                        y:this.storage.workpiece.y,z:this.storage.workpiece.z});
         }
         else if (this.storage.machineType=="3D Printer")
         {
@@ -108,6 +113,8 @@ CWS.Controller.prototype.loadMachine = function()
                 machine: this.storage.machine,
                 material3D: this.material3D,
                 workpiece: this.storage.workpiece});
+            this.renderer.lookAt3DPrinter({x:this.storage.machine.dimension.x,
+                        y:this.storage.machine.dimension.y,z:this.storage.machine.dimension.z});
         }
     };
 
@@ -156,10 +163,21 @@ CWS.Controller.prototype.setWorkpieceDimensions = function(dimensions)
         }
         this.storage.workpiece = workpiece;
         this.machine.updateWorkpieceDimensions();
-        if (this.machine.mtype=="3D Printer")
-            this.runInterpreter();
-        else
+        if (this.machine.mtype=="Lathe")
+        {
             this.updateWorkpieceDraw();
+            this.renderer.lookAtLathe({x:this.storage.workpiece.x,y:this.storage.workpiece.z});
+        }
+        else if (this.machine.mtype=="Mill")
+        {
+            this.updateWorkpieceDraw();
+            this.renderer.lookAtMill({x:this.storage.workpiece.x,
+                        y:this.storage.workpiece.y,z:this.storage.workpiece.z});
+        }
+        else if (this.machine.mtype=="3D Printer")
+        {
+            this.runInterpreter();
+        }
 	};
 
 CWS.Controller.prototype.exportToOBJ = function()
@@ -293,11 +311,15 @@ CWS.Controller.prototype.runInterpreter = function(forceRun)
 
 CWS.Controller.prototype.updateWorkpieceDraw = function()
     {
+
         var mesh;
-        mesh = this.machine.create2DWorkpieceLimits();
-        this.renderer.updateMesh(mesh);
+        var boundingSphere=this.machine.boundingSphere;
         mesh = this.machine.create2DWorkpiece();
         this.renderer.updateMesh(mesh);
+        mesh = this.machine.create2DWorkpieceLimits();
+        this.renderer.updateMesh(mesh);
         mesh = this.machine.create3DWorkpiece();
+        if (this.machine.mtype==="3D Printer" && boundingSphere===false)
+            this.renderer.lookAt3DPrinter(this.machine.boundingSphere.center,this.machine.boundingSphere.radius);
         this.renderer.updateMesh(mesh);
     };

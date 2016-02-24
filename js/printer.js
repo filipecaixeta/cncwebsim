@@ -7,6 +7,8 @@ CWS.Printer = function (options)
 	{
         options = options || {};
 		CWS.Machine.call( this, options );
+		this.mtype="3D Printer";
+		this.boundingSphere = false;
 		this.initMesh();
     }
 
@@ -24,7 +26,6 @@ CWS.Printer.prototype.initMesh = function ()
         this.mesh3D = mesh;
     };
 
-
 CWS.Printer.prototype.create2DWorkpiece = function () 
 	{
 		if (!this.motionData.run2D)
@@ -33,26 +34,53 @@ CWS.Printer.prototype.create2DWorkpiece = function ()
 		geometry.addAttribute( 'position', new THREE.BufferAttribute( this.motionData.positions, 3 ) );
 		geometry.addAttribute( 'vcolor', new THREE.BufferAttribute( this.motionData.color, 1 ) );
 		geometry.computeBoundingSphere();
+		this.boundingSphere = geometry.boundingSphere;
 		var mesh = new THREE.LineSegments( geometry, this.material2D );
-		
+		// mesh.rotation.x=-Math.PI/2;
+		if (this.boundingSphere)
+		{
+			// console.log(this.boundingSphere);
+			mesh.position.x = -this.boundingSphere.center.x;
+	        mesh.position.y = -this.boundingSphere.center.y;
+	        // mesh.position.z = -this.boundingSphere.center.z;
+		}
         mesh.name="2DWorkpiece";
 		return mesh;
 	};
 
 CWS.Printer.prototype.create2DWorkpieceLimits = function () 
 	{
-		return {name:"2DWorkpieceDash"};
+		// return {name:"2DWorkpieceDash"};
+		var geometry = new THREE.PlaneGeometry(this.machine.dimension.x,this.machine.dimension.y,1,1);
+		var material = new THREE.MeshBasicMaterial( {color: 0xa0a0a0, side: THREE.DoubleSide} );
+		var mesh = new THREE.Mesh( geometry, material );
+		if (this.boundingSphere)
+		{
+			// console.log(this.boundingSphere);
+			mesh.position.x = -this.boundingSphere.center.x;
+	        mesh.position.y = -this.boundingSphere.center.y;
+	        // mesh.position.z = -this.boundingSphere.center.z;
+		}
+		mesh.name="2DWorkpieceDash";
+		return mesh;
 	};
 
 CWS.Printer.prototype.create3DWorkpiece = function () 
-{
-	if (!this.motionData.run3D || this.motionData.triangles.length===0)
-		return {name:"3DWorkpiece"};
-	var geometry = this.mesh3D.geometry;
-	geometry.attributes.position.array = this.motionData.triangles;
-	geometry.attributes.position.needsUpdate = true;
-    geometry.computeFaceNormals();
-	geometry.computeVertexNormals();
-
-    return this.mesh3D;
-};
+	{
+		if (!this.motionData.run3D || this.motionData.triangles.length===0)
+			return {name:"3DWorkpiece"};
+		var geometry = this.mesh3D.geometry;
+		geometry.attributes.position.array = this.motionData.triangles;
+		geometry.attributes.position.needsUpdate = true;
+	    geometry.computeFaceNormals();
+		geometry.computeVertexNormals();
+		if (this.boundingSphere)
+		{
+			this.mesh3D.position.x = -this.boundingSphere.center.x;
+	        this.mesh3D.position.y = -this.boundingSphere.center.y;
+	        // this.mesh3D.position.z = -this.boundingSphere.center.z;
+		}
+		// this.mesh3D.rotation.x=-Math.PI/2;
+		// this.mesh3D.rotation.y=Math.PI/2;
+	    return this.mesh3D;
+	};

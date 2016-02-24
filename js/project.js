@@ -35,7 +35,7 @@ CWS.Project.createDefaultMachine = function (machine)
 		{
 			return {
 				mtype: "3D Printer",
-				dimension: {x:500,y:500,z:500},
+				dimension: {x:300,y:300,z:500},
 				maxSpindleRPM: 100,
 				maxFeedRate: {x:500,y:500,z:500},
 				home1:{x:0,y:0,z:0},

@@ -95,7 +95,7 @@ CWS.UI.prototype.resize = function()
 		var width = this.elementBody.innerWidth();
 		
 		var editorWidth;
-		if (this.elementEditor.css('display')=='none')
+		if (this.elementEditor.css('display')==='none')
 			editorWidth = 0;
 		else
 			editorWidth = this.elementEditor.innerWidth();
@@ -316,7 +316,7 @@ CWS.DialogBox.prototype.workpieceDimensions = function (controller)
 	            	var result = $(this.firstChild).serializeArray();
 	            	for (var i = 0; i < result.length; i++) 
 	            	{
-	            		values[result[i].name]=result[i].value;
+	            		values[result[i].name]=parseFloat(result[i].value);
 	            	}
 	              	controller.setWorkpieceDimensions(values);
 	              	$(this).dialog("close");
@@ -379,7 +379,7 @@ CWS.DialogBox.prototype.tool = function (controller)
 		            	var result = $(this.firstChild).serializeArray();
 		            	for (var i = 0; i < result.length; i++) 
 		            	{
-		            		values[result[i].name]=result[i].value;
+		            		values[result[i].name]=parseFloat(result[i].value);
 		            	}
 		              	controller.setMachineTool(values);
 		              	$(this).dialog("close");
