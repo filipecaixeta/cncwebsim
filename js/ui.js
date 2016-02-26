@@ -5,6 +5,7 @@
 
 CWS.UI = function (controller) 
 	{
+		this.controller = controller;
 		var topMenu = $("#topMenu");
 		$("#topMenu>nav > ul > li").each(function(i){$(this)
 			.mouseenter(function(){topMenu.css('height','90px');})
@@ -120,6 +121,7 @@ CWS.UI.prototype.constructor = CWS.UI;
 CWS.UI.prototype.resize = function()
 	{
 		var width = this.elementBody.innerWidth();
+		var height = this.elementBody.innerHeight();
 		
 		var editorWidth;
 		if (this.elementEditor.css('display')==='none')
@@ -129,6 +131,7 @@ CWS.UI.prototype.resize = function()
 
 		this.elementTopMenu.innerWidth(width-editorWidth);
 		this.elementCanvasContainer.innerWidth(width-editorWidth);
+		this.controller.renderer.setSize(width-editorWidth,height);
 		this.elementBottomMenu.innerWidth(width-editorWidth);
 	};
 
