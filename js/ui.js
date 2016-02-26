@@ -5,7 +5,12 @@
 
 CWS.UI = function (controller) 
 	{
-		$("#topMenu").click(
+		var topMenu = $("#topMenu");
+		$("#topMenu>nav > ul > li").each(function(i){$(this)
+			.mouseenter(function(){topMenu.css('height','90px');})
+			.mouseleave(function(){topMenu.css('height','45px');})
+		});
+		topMenu.click(
 			function  (ev) 
 			{
 				var title = ev.target.title
@@ -86,6 +91,28 @@ CWS.UI = function (controller)
 			}
 			controller.runInterpreter();
 		});
+		var color = "green";
+		if (controller.renderer.displayWireframe===false)
+			color="red";
+		$("#wireframeIcon").css('color', color).click(function (ev) 
+		{
+			controller.renderer.displayWireframe=!controller.renderer.displayWireframe;
+			if (controller.renderer.displayWireframe===false)
+			{
+				controller.renderer.removeMesh("2DWorkpieceDash");
+				$(this).css('color','red');
+			}
+			else
+			{
+				controller.renderer.updateMesh(controller.renderer.mesh2DWireframe);
+				$(this).css('color','green');
+			}
+		});
+		$("#runAnimationIcon").click(function (ev) 
+		{
+			controller.runAnimation(true);
+		});
+		// this.
 	}
 
 CWS.UI.prototype.constructor = CWS.UI;

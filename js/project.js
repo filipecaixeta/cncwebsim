@@ -26,7 +26,7 @@ CWS.Project.createDefaultMachine = function (machine)
 				mtype: "Mill",
 				dimension: {x:500,y:500,z:500},
 				maxSpindleRPM: 100,
-				home1:{x:0,y:0,z:0},
+				home1:{x:0,y:0,z:100},
 				home2:{x:0,y:0,z:0},
 				tool:{radius:2.5,angle:0},
 			};
@@ -38,7 +38,7 @@ CWS.Project.createDefaultMachine = function (machine)
 				dimension: {x:300,y:300,z:500},
 				maxSpindleRPM: 100,
 				maxFeedRate: {x:500,y:500,z:500},
-				home1:{x:0,y:0,z:0},
+				home1:{x:0,y:0,z:4},
 				home2:{x:0,y:0,z:0},
 			};
 		}

@@ -24,10 +24,6 @@ body
 	-ms-user-select: none;
 	user-select: none;
 }
-#topMenu:hover
-{
-	height: 100px;
-}
 nav 
 {
 	top:-36px;
@@ -306,4 +302,12 @@ nav > ul > li > div:hover > span
 .notImplemented
 {
 	color: #707070;
+}
+#messages
+{
+	z-index: 50;
+    color: black;
+    padding: 10;
+    bottom: 0;
+    position: absolute;
 }

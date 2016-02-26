@@ -83,7 +83,7 @@ CWS.Controller.prototype.openProject = function(projectName)
 
 CWS.Controller.prototype.loadMachine = function()
     {
-        // this.renderer.camera.target=new THREE.Vector3(0.0,0.0,0.0);
+        this.controls.reset();
         if (this.storage.machineType=="Lathe")
         {
             document.getElementById('machineIcon').className = "icon-lathe";
@@ -93,7 +93,6 @@ CWS.Controller.prototype.loadMachine = function()
                 workpiece: this.storage.workpiece,
                 renderResolution: 512});
             this.renderer.lookAtLathe({x:this.storage.workpiece.x,y:this.storage.workpiece.z});
-            // this.controls.target.set(this.storage.workpiece.x, 0, 0);
         }
         else if (this.storage.machineType=="Mill")
         {
@@ -306,14 +305,15 @@ CWS.Controller.prototype.runInterpreter = function(forceRun)
         this.motion.setData({ header:this.storage.header,
                                 code:code,
                                 run3D:this.run3D,run2D:this.run2D});
+        this.displayMessage("Running G Code");
         this.motion.run();
     };
 
 CWS.Controller.prototype.updateWorkpieceDraw = function()
     {
-
         var mesh;
         var boundingSphere=this.machine.boundingSphere;
+        this.displayMessage("Generating geometry");
         mesh = this.machine.create2DWorkpiece();
         this.renderer.updateMesh(mesh);
         mesh = this.machine.create2DWorkpieceLimits();
@@ -321,5 +321,30 @@ CWS.Controller.prototype.updateWorkpieceDraw = function()
         mesh = this.machine.create3DWorkpiece();
         if (this.machine.mtype==="3D Printer" && boundingSphere===false)
             this.renderer.lookAt3DPrinter(this.machine.boundingSphere.center,this.machine.boundingSphere.radius);
+        this.runAnimation(false);
         this.renderer.updateMesh(mesh);
+        if (this.machine.motionData.error.length!==0)
+        {
+            this.displayMessage(this.machine.motionData.error[0],true);
+        }
+        else
+            this.displayMessage();
+    };
+
+CWS.Controller.prototype.runAnimation = function(display)
+    {
+        this.renderer.animate(display,this.machine.mtype);
+    };
+
+CWS.Controller.prototype.displayMessage = function(message,error)
+    {
+        if (message===undefined)
+            $("#messages").text("");
+        else
+        {
+            if (error===true)
+                $("#messages").css('color','red').text(message);
+            else
+                $("#messages").css('color','black').text(message);
+        }
     };

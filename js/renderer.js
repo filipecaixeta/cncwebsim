@@ -6,7 +6,9 @@
 CWS.Renderer = function (id,options) 
 	{
 		options = options || {};
-		
+
+		this.displayWireframe = options.displayWireframe===undefined?true:options.displayWireframe;
+
 		this.renderer = new THREE.WebGLRenderer({clearColor: 0xffffff,antialias: true });
 		// this.renderer.domElement.style.background = "#ffffff";
 		this.renderer.autoClear = true;
@@ -111,7 +113,7 @@ CWS.Renderer.prototype.lookAt3DPrinter = function (center,radius)
 		var cameraPosition = new THREE.Vector3(0,0,distance);
 		this.camera.position.copy( cameraPosition );
 		this.camera.far = 2000;
-		this.camera.near = 0.1;
+		this.camera.near = 1;
 		this.camera.updateProjectionMatrix();
 	};
 
@@ -141,18 +143,117 @@ CWS.Renderer.prototype.removeMesh = function (meshName)
 	{
 		if (meshName!==undefined)
 		{
-			this.scene.remove(this.scene.getObjectByName(meshName));
+			var mesh = this.scene.getObjectByName(meshName);
+			if (mesh)
+				this.scene.remove(mesh);
 		}
 	};
 
 CWS.Renderer.prototype.render = function (obj)
 	{
+		if (this.doAnimation)
+		{
+			this.animationEnd2D +=this.animationStep*this.animationDataSize2D;
+			this.animationEnd3D +=this.animationStep*this.animationDataSize3D;
+		    if (this.mesh3D && this.animationDataSize3D!==0)
+		    {
+		    	if (this.animationEnd3D>=this.mesh3D.geometry.attributes.position.array.length/3)
+		    		this.doAnimation = false;
+		    	this.mesh3D.geometry.setDrawRange(0,this.animationEnd3D);
+		    }
+		    if (this.mesh2D)
+		    {
+		    	if (this.animationEnd2D>=this.mesh2D.geometry.attributes.position.array.length/3)
+		    	{
+		    		this.doAnimation = false;
+		    	}
+		    	var color = this.mesh2D.geometry.attributes.vcolor.array;
+		    	while (color[this.animationEnd2D]==2 || color[this.animationEnd2D]==3)
+		    	{
+		    		this.animationEnd2D+=2;	
+		    	}
+		    	this.mesh2D.geometry.setDrawRange(0,this.animationEnd2D);
+		    }
+		}
 		this.renderer.render( this.scene, this.camera );
 	};
 
 CWS.Renderer.prototype.updateMesh = function (obj)
 	{
 		this.removeMesh(obj.name);
-        if (obj.geometry!==undefined)
-		      this.scene.add(obj);  
+		if (obj.name==="3DWorkpiece")
+		{
+			if (obj.geometry!==undefined)
+			{
+				this.addMesh(obj);
+				this.mesh3D = obj;
+			}
+			else
+				this.mesh3D = undefined;
+		}
+		else if (obj.name==="2DWorkpiece")
+		{
+			if (obj.geometry!==undefined)
+			{
+				this.addMesh(obj);
+				this.mesh2D = obj;
+			}
+			else
+				this.mesh2D = undefined;
+		}
+		else if (obj.name==="2DWorkpieceDash")
+		{
+			if (obj.geometry!==undefined)
+			{
+				this.mesh2DWireframe = obj;
+				if (this.displayWireframe!==false)
+					this.addMesh(obj);
+			}
+			else
+				this.mesh2DWireframe = undefined;
+		}
+	};
+
+CWS.Renderer.prototype.animate = function (b,machineType)
+	{
+		if (this.doAnimation===true&& b===true)
+			b=false;
+		this.animationStep = 1;
+		if (b===false)
+		{
+			this.doAnimation=false;
+			this.animationEnd2D = Infinity;
+	    	this.animationEnd3D = Infinity;
+		}
+		else
+		{
+			this.doAnimation=true;
+			this.animationEnd2D = 0;
+	    	this.animationEnd3D = 0;
+		}
+
+		if (machineType==="Lathe")
+		{
+			this.animationDataSize2D = 2;
+			this.animationDataSize3D = 0;
+			this.animationEnd3D = Infinity;
+		}
+		else if (machineType==="Mill")
+		{
+			this.animationDataSize2D = 2;
+			this.animationDataSize3D = 0;
+			this.animationEnd3D = Infinity;
+		}
+		else if (machineType==="3D Printer")
+		{
+			this.animationDataSize2D = 2;
+			this.animationDataSize3D = 24;
+		}
+	    this.animationEnd3D +=this.animationStep*this.animationDataSize3D;
+		this.animationEnd2D +=this.animationStep*this.animationDataSize2D;
+
+	    if (this.mesh3D)
+	    	this.mesh3D.geometry.setDrawRange(0,this.animationEnd3D);
+	    if (this.mesh2D)
+	    	this.mesh2D.geometry.setDrawRange(0,this.animationEnd2D);
 	};

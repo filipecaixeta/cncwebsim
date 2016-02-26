@@ -40,8 +40,6 @@
 	// TODO
 	// 3D Printer filament
 	// Lathe tool
-	// Display error
-	// Touggle workpiecelimits
 	window.addEventListener("load", (function () 
 	{
         controller = new CWS.Controller(
@@ -121,9 +119,12 @@
         <span id="machineIcon"></span>
 	</div>
 	<div id="canvasContainer">
+	<div id="messages"></div>
 	</div>
 	<div id="bottomMenu">
 		<span title="Run" id="runIcon" class="icon-play3"></span>
+		<span title="Run Animation" id="runAnimationIcon" class="icon-film"></span>
+		<span title="Display wireframe" id="wireframeIcon" class="icon-codepen"></span>
 		<span title="Auto Run" id="autoRunIcon" class="icon-spinner9"></span>
 		<span title="Save" id="saveIcon" class="icon-floppy-disk"></span>
 		<span title="Simulate 2D" id="run2DIcon" >2D</span>

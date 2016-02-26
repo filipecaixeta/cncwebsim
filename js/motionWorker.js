@@ -53,6 +53,8 @@ function runCode (data)
 	var i2=0;
 	if (data.header.machine.mtype==="3D Printer" && data.run3D===true)
 	{
+		d = data.header.workpiece.diameter;
+		var d=0.4/2;
 		while (i<l)
 		{
 			var cmd=interpreter.getCommand();
@@ -64,8 +66,6 @@ function runCode (data)
 			positions[ i + 3 ] = cmd.x1;
 			positions[ i + 4 ] = cmd.y1;
 			positions[ i + 5 ] = cmd.z1;
-
-			d=0.4/2;
 
 			vx=(cmd.x1-cmd.x0);
 			vy=(cmd.y1-cmd.y0);
