@@ -15,6 +15,7 @@ CWS.Machine = function (options)
 													g1: new THREE.Color(0,0,1),
 													g2: new THREE.Color(1,0,1),
 													g3: new THREE.Color(0,1,1),};
+		this.meshes = {mesh2D:false,mesh3D:false,meshWorkpiece:false};
 		// For 2D drawing
 		this.material2D = new THREE.ShaderMaterial( 
 		{
@@ -35,6 +36,8 @@ CWS.Machine.prototype.constructor = CWS.Machine;
 CWS.Machine.prototype.setMotion = function (motionData) 
 	{
 		this.motionData = motionData;
+		this.meshes.mesh2D = false;
+		this.meshes.mesh3D = false;
 	};
 
 CWS.Machine.prototype.create2DWorkpiece = function () 
@@ -83,14 +86,90 @@ CWS.Machine.prototype.createProgram = function (gl, vertexShader, fragmentShader
 CWS.Machine.prototype.updateWorkpieceDimensions = function ()
     {
         
-    }
+    };
 
 CWS.Machine.prototype.updateTool = function ()
     {
         
-    }
+    };
 
 CWS.Machine.prototype.updateRendererResolution = function ()
     {
         
-    }
+    };
+
+CWS.Machine.prototype.create2DWorkpiece = function () 
+	{
+		this.mesh2D.visible = true;
+		if (this.meshes.mesh2D === true)
+			return;
+
+        var geometry = this.mesh2D.geometry;
+        // Updating the positions and vcolor by the 'correct' way won't
+        // work here because the buffer size keeps changing all the time
+        // I don't want to create a new mesh every time. Adding again the
+        // position and vcolor will replace the buffer. I'm not that sure
+        // if I'm doing something that could break the code later. 
+        geometry.addAttribute( 'position', new THREE.BufferAttribute( this.motionData.positions ,3));
+		geometry.addAttribute( 'vcolor', new THREE.BufferAttribute( this.motionData.color ,1 ));
+        geometry.setDrawRange(0,Infinity);
+        this.mesh2D.visible = true;
+        this.meshes.mesh2D = true;
+
+        this.mesh2D.animation = {
+        	size: geometry.attributes.position.array.length/3,
+        	beg:0,
+        	end:0,
+        	dataSize: 2,
+        	step:1,
+        	animationState: false,
+        	touggleAnimation: function () 
+        	{
+        		this.animationState = !this.animationState;
+        		this.end = 0;
+        		this.animate(this.animationState);
+        	},
+        	animate: function (b) 
+        	{
+        		if (b===true)
+        		{
+        			this.next = function () 
+		        	{
+		        		if (this.end>this.size)
+		        		{
+		        			this.animationState = false;
+		        			return false;
+		        		}
+		        		this.end += this.step*this.dataSize;
+		        		while (geometry.attributes.vcolor.array[this.end]>=2)
+		        		{
+		        			this.end += 2;
+		        		}
+		        		geometry.setDrawRange(this.beg,this.end);
+		        		return true;
+		        	}
+        		}
+        		else
+        		{
+        			this.next = function(){return false;};
+        			geometry.setDrawRange(0,Infinity);	
+        		}
+        	},
+        	next: function(){return false;},
+    	};
+    };
+
+CWS.Machine.prototype.create3DWorkpiece = function () 
+	{
+		this.mesh3D.visible = true;
+        if (this.meshes.mesh3D === true)
+            return;
+
+        this._create3DWorkpiece();
+
+        this.mesh3D.geometry.setDrawRange(0,Infinity);
+        this.mesh3D.visible = true;
+        this.meshes.mesh3D = true;
+
+        return this.mesh3D;
+	};

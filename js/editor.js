@@ -4,6 +4,8 @@
 
 CWS.CodeEditor = function () 
 	{
+		var date=new Date();
+		
 		this.editor = new ace.edit("editor");
 		this.editor.$blockScrolling = Infinity;
 		this.editor.setTheme("ace/theme/monokai");
@@ -21,6 +23,7 @@ CWS.CodeEditor = function ()
 				return;
 			context.codeChanged(e);
 		});
+
 	};
 
 CWS.CodeEditor.prototype.constructor = CWS.CodeEditor;

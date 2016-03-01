@@ -75,10 +75,13 @@ THREE.TrackballControls = function ( object, domElement ) {
 	var startEvent = { type: 'start' };
 	var endEvent = { type: 'end' };
 
+	this.controlUpdated = true;
 
 	// methods
 
 	this.handleResize = function () {
+
+		_this.controlUpdated = true;
 
 		if ( this.domElement === document ) {
 
@@ -333,6 +336,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	this.reset = function () {
 
+		_this.controlUpdated = true;
+
 		_state = STATE.NONE;
 		_prevState = STATE.NONE;
 
@@ -353,6 +358,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 	// listeners
 
 	function keydown( event ) {
+
+		_this.controlUpdated = true;
 
 		if ( _this.enabled === false ) return;
 
@@ -380,6 +387,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	function keyup( event ) {
 
+		_this.controlUpdated = true;
+
 		if ( _this.enabled === false ) return;
 
 		_state = _prevState;
@@ -387,6 +396,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 	}
 
 	function mousedown( event ) {
+
+		_this.controlUpdated = true;
 
 		if ( _this.enabled === false ) return;
 
@@ -422,6 +433,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	function mousemove( event ) {
 
+		_this.controlUpdated = true;
+
 		if ( _this.enabled === false ) return;
 
 		if ( _state === STATE.ROTATE && ! _this.noRotate ) {
@@ -438,10 +451,11 @@ THREE.TrackballControls = function ( object, domElement ) {
 			_panEnd.copy( getMouseOnScreen( event.pageX, event.pageY ) );
 
 		}
-
 	}
 
 	function mouseup( event ) {
+
+		_this.controlUpdated = true;
 
 		if ( _this.enabled === false ) return;
 
@@ -454,6 +468,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 	}
 
 	function mousewheel( event ) {
+
+		_this.controlUpdated = true;
 
 		if ( _this.enabled === false ) return;
 
@@ -480,6 +496,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 	}
 
 	function touchstart( event ) {
+
+		_this.controlUpdated = true;
 
 		if ( _this.enabled === false ) return;
 
@@ -511,6 +529,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	function touchmove( event ) {
 
+		_this.controlUpdated = true;
+
 		if ( _this.enabled === false ) return;
 
 		switch ( event.touches.length ) {
@@ -535,6 +555,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 	}
 
 	function touchend( event ) {
+
+		_this.controlUpdated = true;
 
 		if ( _this.enabled === false ) return;
 

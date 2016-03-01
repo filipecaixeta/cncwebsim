@@ -20,39 +20,39 @@ CWS.Renderer = function (id,options)
 		this.renderer.domElement.style['z-index']=41;
 
 		this.scene = new THREE.Scene();
-    
-        var ambientLight = new THREE.AmbientLight( 0x000000 );
-        this.scene.add( ambientLight );
+	
+		var ambientLight = new THREE.AmbientLight( 0x000000 );
+		this.scene.add( ambientLight );
 
-        var lights = [];
-        lights[0] = new THREE.PointLight( 0xffffff, 1, 0 );
-        lights[1] = new THREE.PointLight( 0xffffff, 1, 0 );
-        lights[2] = new THREE.PointLight( 0xffffff, 1, 0 );
-    
-        lights[0].position.set( 0, 200, 0 );
-        lights[1].position.set( 100, 200, 100 );
-        lights[2].position.set( -100, -200, -100 );
+		var lights = [];
+		lights[0] = new THREE.PointLight( 0xffffff, 1, 0 );
+		lights[1] = new THREE.PointLight( 0xffffff, 1, 0 );
+		lights[2] = new THREE.PointLight( 0xffffff, 1, 0 );
+	
+		lights[0].position.set( 0, 200, 0 );
+		lights[1].position.set( 100, 200, 100 );
+		lights[2].position.set( -100, -200, -100 );
 
-        this.scene.add( lights[0] );
-        this.scene.add( lights[1] );
-        this.scene.add( lights[2] );
+		this.scene.add( lights[0] );
+		this.scene.add( lights[1] );
+		this.scene.add( lights[2] );
 
-//		var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );
-//		this.scene.add( ambientLight );
+		// var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );
+		// this.scene.add( ambientLight );
 
-//		var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
-//		directionalLight.position.x = Math.random() - 0.5;
-//		directionalLight.position.y = Math.random() - 0.5;
-//		directionalLight.position.z = Math.random() - 0.5;
-//		directionalLight.position.normalize();
-//		this.scene.add( directionalLight );
-//
-//		var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
-//		directionalLight.position.x = Math.random() - 0.5;
-//		directionalLight.position.y = Math.random() - 0.5;
-//		directionalLight.position.z = Math.random() - 0.5;
-//		directionalLight.position.normalize();
-//		this.scene.add( directionalLight );
+		// var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
+		// directionalLight.position.x = Math.random() - 0.5;
+		// directionalLight.position.y = Math.random() - 0.5;
+		// directionalLight.position.z = Math.random() - 0.5;
+		// directionalLight.position.normalize();
+		// this.scene.add( directionalLight );
+
+		// var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
+		// directionalLight.position.x = Math.random() - 0.5;
+		// directionalLight.position.y = Math.random() - 0.5;
+		// directionalLight.position.z = Math.random() - 0.5;
+		// directionalLight.position.normalize();
+		// this.scene.add( directionalLight );
 
 		this.width = options.width || 512;
 		this.height = options.height || 512;
@@ -64,21 +64,19 @@ CWS.Renderer = function (id,options)
 		this.camera.lookAt( this.scene.position );
 	}
 
-
-
-CWS.Renderer.prototype.constructor = CWS.Renderer;
-
 CWS.Renderer.prototype = 
 	{
 		get domElement()
-	    {
-	        return this.renderer.domElement;
-	    },
-	    set domElement(val)
-	    {
-	        this.renderer.domElement = val;
-	    },
+		{
+			return this.renderer.domElement;
+		},
+		set domElement(val)
+		{
+			this.renderer.domElement = val;
+		},
 	};
+
+CWS.Renderer.prototype.constructor = CWS.Renderer;
 
 CWS.Renderer.prototype.lookAtLathe = function (dimensions)
 	{
@@ -134,11 +132,6 @@ CWS.Renderer.prototype.setSize = function (width,height)
 		this.renderer.setSize( this.width, this.height );
 	};
 
-CWS.Renderer.prototype.addMesh = function (obj)
-	{
-		this.scene.add(obj);
-	};
-
 CWS.Renderer.prototype.removeMesh = function (meshName)
 	{
 		if (meshName!==undefined)
@@ -149,111 +142,39 @@ CWS.Renderer.prototype.removeMesh = function (meshName)
 		}
 	};
 
-CWS.Renderer.prototype.render = function (obj)
+CWS.Renderer.prototype.render = function (controls)
 	{
-		if (this.doAnimation)
+		if (this['2DWorkpiece'] && this['2DWorkpiece'].animation)
 		{
-			this.animationEnd2D +=this.animationStep*this.animationDataSize2D;
-			this.animationEnd3D +=this.animationStep*this.animationDataSize3D;
-		    if (this.mesh3D && this.animationDataSize3D!==0)
-		    {
-		    	if (this.animationEnd3D>=this.mesh3D.geometry.attributes.position.array.length/3)
-		    		this.doAnimation = false;
-		    	this.mesh3D.geometry.setDrawRange(0,this.animationEnd3D);
-		    }
-		    if (this.mesh2D)
-		    {
-		    	if (this.animationEnd2D>=this.mesh2D.geometry.attributes.position.array.length/3)
-		    	{
-		    		this.doAnimation = false;
-		    	}
-		    	var color = this.mesh2D.geometry.attributes.vcolor.array;
-		    	while (color[this.animationEnd2D]==2 || color[this.animationEnd2D]==3)
-		    	{
-		    		this.animationEnd2D+=2;	
-		    	}
-		    	this.mesh2D.geometry.setDrawRange(0,this.animationEnd2D);
-		    }
+			this['2DWorkpiece'].animation.next()
+		}
+		if (this['3DWorkpiece'] && this['3DWorkpiece'].animation)
+		{
+			this['3DWorkpiece'].animation.next();
 		}
 		this.renderer.render( this.scene, this.camera );
 	};
 
-CWS.Renderer.prototype.updateMesh = function (obj)
+CWS.Renderer.prototype.animate = function (b,meshName)
 	{
-		this.removeMesh(obj.name);
-		if (obj.name==="3DWorkpiece")
-		{
-			if (obj.geometry!==undefined)
-			{
-				this.addMesh(obj);
-				this.mesh3D = obj;
-			}
-			else
-				this.mesh3D = undefined;
-		}
-		else if (obj.name==="2DWorkpiece")
-		{
-			if (obj.geometry!==undefined)
-			{
-				this.addMesh(obj);
-				this.mesh2D = obj;
-			}
-			else
-				this.mesh2D = undefined;
-		}
-		else if (obj.name==="2DWorkpieceDash")
-		{
-			if (obj.geometry!==undefined)
-			{
-				this.mesh2DWireframe = obj;
-				if (this.displayWireframe!==false)
-					this.addMesh(obj);
-			}
-			else
-				this.mesh2DWireframe = undefined;
-		}
+		if (this[meshName])
+			this[meshName].animation.touggleAnimation();
 	};
 
-CWS.Renderer.prototype.animate = function (b,machineType)
+CWS.Renderer.prototype.addMesh = function (meshName,mesh)
 	{
-		if (this.doAnimation===true&& b===true)
-			b=false;
-		this.animationStep = 1;
-		if (b===false)
+		var meshTemp = this.scene.getObjectByName(meshName);
+		if (meshTemp)
 		{
-			this.doAnimation=false;
-			this.animationEnd2D = Infinity;
-	    	this.animationEnd3D = Infinity;
+			this.scene.remove(meshTemp);
+			this[meshName] = undefined;
 		}
-		else
+		if (mesh.geometry !== undefined)
 		{
-			this.doAnimation=true;
-			this.animationEnd2D = 0;
-	    	this.animationEnd3D = 0;
+			mesh.name = meshName;
+			if (mesh instanceof THREE.BufferGeometry)
+				mesh.geometry.setDrawRange(0,Infinity);
+			this[meshName] = mesh;
+			this.scene.add(mesh);
 		}
-
-		if (machineType==="Lathe")
-		{
-			this.animationDataSize2D = 2;
-			this.animationDataSize3D = 0;
-			this.animationEnd3D = Infinity;
-		}
-		else if (machineType==="Mill")
-		{
-			this.animationDataSize2D = 2;
-			this.animationDataSize3D = 0;
-			this.animationEnd3D = Infinity;
-		}
-		else if (machineType==="3D Printer")
-		{
-			this.animationDataSize2D = 2;
-			this.animationDataSize3D = 24;
-		}
-	    this.animationEnd3D +=this.animationStep*this.animationDataSize3D;
-		this.animationEnd2D +=this.animationStep*this.animationDataSize2D;
-
-	    if (this.mesh3D)
-	    	this.mesh3D.geometry.setDrawRange(0,this.animationEnd3D);
-	    if (this.mesh2D)
-	    	this.mesh2D.geometry.setDrawRange(0,this.animationEnd2D);
 	};

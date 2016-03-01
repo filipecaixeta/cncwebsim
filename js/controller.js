@@ -11,8 +11,9 @@ CWS.Controller = function (editor,storage,renderer,motion,autoRun)
         this.motion.setController(this);
         this.saveFlag = 0;
         this.autoRun = false;
-        this.run3D = true;
-        this.run2D = true;
+        this._run3D = true;
+        this._run2D = true;
+        this._runWireframe = true;
 
         this.createDatGUI();
         // Create controls
@@ -22,7 +23,7 @@ CWS.Controller = function (editor,storage,renderer,motion,autoRun)
         this.controls.panSpeed = 0.4;
         this.controls.noZoom = false;
         this.controls.noPan = false;
-        this.controls.staticMoving = false;
+        this.controls.staticMoving = true;
         this.controls.dynamicDampingFactor = 0.3;
         // Init the storage
         if (this.storage.isFirstRun)
@@ -52,10 +53,53 @@ CWS.Controller = function (editor,storage,renderer,motion,autoRun)
             {
                 if (controller.saveFlag===0)
                     return;
-                controller.saveFlag = Infinity;
-                controller.save(); 
-            }, 5000);
+                controller.save(true); 
+            }, 60000);
+        $(window).bind("beforeunload", function() 
+        { 
+            if (controller.saveFlag===0)
+                return;
+            controller.save(true);
+        });
         this.autoRun = autoRun;
+    };
+
+CWS.Controller.prototype = 
+    {
+        get run2D()
+        {
+            return this._run2D;
+        },
+        set run2D(val)
+        {
+            this._run2D = val;
+            this.update2D();
+        },
+        get run3D()
+        {
+            return this._run3D;
+        },
+        set run3D(val)
+        {
+            this._run3D = val;
+            this.update3D();
+        },
+        get runWireframe()
+        {
+            return this._runWireframe;
+        },
+        set runWireframe(val)
+        {
+            this._runWireframe = val;
+            if (this._runWireframe === true)
+            {
+                this.machine.meshWorkpiece.visible = true;
+            }
+            else
+            {
+                this.machine.meshWorkpiece.visible = false;
+            }
+        },
     };
 
 CWS.Controller.prototype.constructor = CWS.Controller;
@@ -93,6 +137,9 @@ CWS.Controller.prototype.loadMachine = function()
                 workpiece: this.storage.workpiece,
                 renderResolution: 512});
             this.renderer.lookAtLathe({x:this.storage.workpiece.x,y:this.storage.workpiece.z});
+            this.renderer.addMesh("2DWorkpiece",this.machine.mesh2D);
+            this.renderer.addMesh("3DWorkpiece",this.machine.mesh3D);
+            this.updateWireframe();
         }
         else if (this.storage.machineType=="Mill")
         {
@@ -104,6 +151,9 @@ CWS.Controller.prototype.loadMachine = function()
                 renderResolution: 512});
             this.renderer.lookAtMill({x:this.storage.workpiece.x,
                         y:this.storage.workpiece.y,z:this.storage.workpiece.z});
+            this.renderer.addMesh("2DWorkpiece",this.machine.mesh2D);
+            this.renderer.addMesh("3DWorkpiece",this.machine.mesh3D);
+            this.updateWireframe();
         }
         else if (this.storage.machineType=="3D Printer")
         {
@@ -114,6 +164,9 @@ CWS.Controller.prototype.loadMachine = function()
                 workpiece: this.storage.workpiece});
             this.renderer.lookAt3DPrinter({x:this.storage.machine.dimension.x,
                         y:this.storage.machine.dimension.y,z:this.storage.machine.dimension.z});
+            this.renderer.addMesh("2DWorkpiece",this.machine.mesh2D);
+            this.renderer.addMesh("3DWorkpiece",this.machine.mesh3D);
+            this.updateWireframe();
         }
     };
 
@@ -270,16 +323,20 @@ CWS.Controller.prototype.windowResize = function()
         this.renderer.setSize(maincanvasdiv.offsetWidth,maincanvasdiv.offsetHeight);
     };
 
-CWS.Controller.prototype.render = function()
+CWS.Controller.prototype.render = function(forceUpdate)
     {
         this.controls.update();
-        this.renderer.render();
+        // if (this.controls.controlUpdated || forceUpdate)
+        // {   
+            this.renderer.render(this.controls);
+            // this.controls.controlUpdated = false;
+        // }
     };
 
 CWS.Controller.prototype.save = function(forceSave)
     {
         // Set the number of changes to save the code
-        var changes = 5;
+        var changes = 30;
         if (forceSave===true)
             this.saveFlag=Infinity;    
         this.saveFlag++;
@@ -303,8 +360,7 @@ CWS.Controller.prototype.runInterpreter = function(forceRun)
             return;
         var code = this.editor.getCode();
         this.motion.setData({ header:this.storage.header,
-                                code:code,
-                                run3D:this.run3D,run2D:this.run2D});
+                                code:code});
         this.displayMessage("Running G Code");
         this.motion.run();
     };
@@ -314,15 +370,13 @@ CWS.Controller.prototype.updateWorkpieceDraw = function()
         var mesh;
         var boundingSphere=this.machine.boundingSphere;
         this.displayMessage("Generating geometry");
-        mesh = this.machine.create2DWorkpiece();
-        this.renderer.updateMesh(mesh);
-        mesh = this.machine.create2DWorkpieceLimits();
-        this.renderer.updateMesh(mesh);
-        mesh = this.machine.create3DWorkpiece();
+        
+        this.update2D();
+        this.update3D();
+       
         if (this.machine.mtype==="3D Printer" && boundingSphere===false)
             this.renderer.lookAt3DPrinter(this.machine.boundingSphere.center,this.machine.boundingSphere.radius);
-        this.runAnimation(false);
-        this.renderer.updateMesh(mesh);
+        
         if (this.machine.motionData.error.length!==0)
         {
             this.displayMessage(this.machine.motionData.error[0],true);
@@ -331,9 +385,41 @@ CWS.Controller.prototype.updateWorkpieceDraw = function()
             this.displayMessage();
     };
 
-CWS.Controller.prototype.runAnimation = function(display)
+CWS.Controller.prototype.update2D = function()
     {
-        this.renderer.animate(display,this.machine.mtype);
+        if (this.run2D === true)
+        {
+            this.machine.create2DWorkpiece();
+            this.machine.mesh2D.visible = true;
+        }
+        else
+        {
+            this.machine.mesh2D.visible = false;
+        }
+    };
+
+CWS.Controller.prototype.update3D = function()
+    {
+        if (this.run3D === true)
+        {
+            this.machine.create3DWorkpiece();
+            this.machine.mesh3D.visible = true;
+        }
+        else
+        {
+            this.machine.mesh3D.visible = false;
+        }
+    };
+
+CWS.Controller.prototype.updateWireframe = function()
+    {
+        this.renderer.addMesh("2DWorkpieceDash",this.machine.meshWorkpiece);
+    };
+
+CWS.Controller.prototype.runAnimation = function(animate)
+    {
+        this.renderer.animate(animate,"2DWorkpiece");
+        this.renderer.animate(animate,"3DWorkpiece");
     };
 
 CWS.Controller.prototype.displayMessage = function(message,error)

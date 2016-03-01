@@ -79,7 +79,7 @@ CWS.UI = function (controller)
 			{
 				$(this).css('color','green');
 			}
-			controller.runInterpreter();
+			controller.update2D();
 		});
 		$("#run3DIcon").css('color', 'green').click(function (ev) 
 		{
@@ -90,30 +90,27 @@ CWS.UI = function (controller)
 			{
 				$(this).css('color','green');
 			}
-			controller.runInterpreter();
+			controller.update3D();
 		});
 		var color = "green";
 		if (controller.renderer.displayWireframe===false)
 			color="red";
 		$("#wireframeIcon").css('color', color).click(function (ev) 
 		{
-			controller.renderer.displayWireframe=!controller.renderer.displayWireframe;
-			if (controller.renderer.displayWireframe===false)
+			controller.runWireframe=!controller.runWireframe;
+			if (controller.runWireframe===false)
 			{
-				controller.renderer.removeMesh("2DWorkpieceDash");
 				$(this).css('color','red');
 			}
 			else
 			{
-				controller.renderer.updateMesh(controller.renderer.mesh2DWireframe);
 				$(this).css('color','green');
 			}
 		});
 		$("#runAnimationIcon").click(function (ev) 
 		{
-			controller.runAnimation(true);
+			controller.runAnimation();
 		});
-		// this.
 	}
 
 CWS.UI.prototype.constructor = CWS.UI;

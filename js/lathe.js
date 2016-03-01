@@ -14,7 +14,9 @@ CWS.Lathe = function (options)
 		this.mtype="Lathe";
 
 		this.initWebGL();
-        this.initLatheGeometry();
+		this.initGeometry2D();
+        this.initGeometry3D();
+        this.create2DWorkpieceLimits();
 	}
 
 CWS.Lathe.prototype = Object.create( CWS.Machine.prototype );
@@ -52,17 +54,17 @@ CWS.Lathe.prototype.initWebGL = function ()
 
 CWS.Lathe.prototype.updateWorkpieceDimensions = function ()
     {
-        
-    }
-
-CWS.Lathe.prototype.updateTool = function ()
-    {
-        
+        this.meshes.mesh3D = false;
+        this.meshes.meshWorkpiece = false;
+        this.create3DWorkpiece();
+        this.create2DWorkpieceLimits();
     }
 
 CWS.Lathe.prototype.updateRendererResolution = function ()
     {
-        
+        setRendererResolution(this.renderResolution);
+        this.meshes.mesh3D = false;
+        this.create3DWorkpiece();
     }
 
 CWS.Lathe.prototype.setRendererResolution = function (renderResolution) 
@@ -77,7 +79,24 @@ CWS.Lathe.prototype.setRendererResolution = function (renderResolution)
 	    this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
 	};
 
-CWS.Lathe.prototype.initLatheGeometry = function () 
+CWS.Lathe.prototype.initGeometry2D = function () 
+	{
+		var geometry = new THREE.BufferGeometry();
+		geometry.boundingSphere = new THREE.Sphere( new THREE.Vector3(0,0,0),99999);
+        geometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array([0,0,0,0,0,0]) ,3));
+		geometry.addAttribute( 'vcolor', new THREE.BufferAttribute( new Float32Array([0,0]) ,1 ));
+		geometry.attributes.position.dynamic = true;
+		geometry.attributes.vcolor.dynamic = true;
+		geometry.setDrawRange(0,Infinity);
+		var mesh = new THREE.LineSegments( geometry, this.material2D );
+		mesh.name = "2DWorkpiece";
+		mesh.rotation.x = Math.PI/2;
+		mesh.rotation.y = Math.PI/2;
+		mesh.position.x = -this.workpiece.z/2;
+        this.mesh2D = mesh;
+    }
+
+CWS.Lathe.prototype.initGeometry3D = function () 
 	{
 		var segments = this.segments;
         var phiStart = 0;
@@ -149,11 +168,13 @@ CWS.Lathe.prototype.initLatheGeometry = function ()
         geometry.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
 		geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 		geometry.setIndex( new THREE.BufferAttribute( index, 1 ) );
+		geometry.attributes.position.dynamic = true;
 
-        var lathe = new THREE.Mesh( geometry, this.material3D);
-		lathe.name="3DWorkpiece";
+        var mesh = new THREE.Mesh( geometry, this.material3D);
+		mesh.position.x = -this.workpiece.z/2;
+		mesh.name="3DWorkpiece";
     
-        this.mesh3D = lathe;
+        this.mesh3D = mesh;
     }
 
 CWS.Lathe.prototype.generateLatheGeometry = function () 
@@ -189,85 +210,46 @@ CWS.Lathe.prototype.generateLatheGeometry = function ()
             vertices[iv++] = 0;
             vertices[iv++] = 0;
         }
-        //        var face = new Uint32Array( (SlicesX-1)*(segments-1)*6 );
-        //        var ii=0;
-        //        var ifa=0;
-        //        for ( var ix = 0; ix < SlicesX-1; ix++) 
-        //		{        
-        //            for (ir=0; ir<(segments-1)*2; ir++)
-        //			{
-        //                var cb = new THREE.Vector3(), ab = new THREE.Vector3();
-        //                var i=index[ii++];
-        //                var vA = new THREE.Vector3(vertices[i*3],vertices[i*3+1],vertices[i*3+2]);
-        //                i=index[ii++];
-        //                var vB = new THREE.Vector3(vertices[i*3],vertices[i*3+1],vertices[i*3+2]);
-        //                i=index[ii++];
-        //                var vC = new THREE.Vector3(vertices[i*3],vertices[i*3+1],vertices[i*3+2]);
-        //
-        //                cb.subVectors( vC, vB );
-        //                ab.subVectors( vA, vB );
-        //                cb.cross( ab );
-        //                cb.normalize();
-        //
-        //                var fx=cb.x;
-        //                var fy=cb.y;
-        //                var fz=cb.z;
-        //                
-        //                face[ifa++] = fx;
-        //                face[ifa++] = fy;
-        //                face[ifa++] = fz;
-        //			}
-        //        }
-        //        console.log(ii);
-        
+
         this.mesh3D.geometry.attributes.position.array = vertices;
         this.mesh3D.geometry.attributes.position.needsUpdate = true;
-        this.mesh3D.geometry.attributes.position.dynamic = true;
 		this.mesh3D.geometry.computeFaceNormals();
 		this.mesh3D.geometry.computeVertexNormals();
 	};
 
 CWS.Lathe.prototype.create2DWorkpieceLimits = function () 
 	{
+		if (this.meshes.meshWorkpiece === true)
+			return;
+		
 		var R=this.workpiece.x/2;
 		var L=this.workpiece.z;
-		var lineGeometry = new THREE.Geometry();
-		var vertArray = lineGeometry.vertices;
-		vertArray.push( new THREE.Vector3(R,0,0), new THREE.Vector3(R,0, L) ,
-			new THREE.Vector3(0,0, L),new THREE.Vector3(0,0,0),new THREE.Vector3(R,0,0) );
-		lineGeometry.computeLineDistances();
-		var lineMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 1 } );
-		var line = new THREE.Line( lineGeometry, lineMaterial );
-		line.name="2DWorkpieceDash";
-		line.rotation.x=Math.PI/2;
-		line.rotation.y=Math.PI/2;
-		line.position.x = -this.workpiece.z/2;
-		return line;
-	};
 
-CWS.Lathe.prototype.create2DWorkpiece = function () 
-	{
-		if (!this.motionData.run2D)
-            return {name:"2DWorkpiece"};
-		var geometry = new THREE.BufferGeometry();
-		geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0,0,0),99999);
-        geometry.addAttribute( 'position', new THREE.BufferAttribute( this.motionData.positions, 3 ) );
-		geometry.addAttribute( 'vcolor', new THREE.BufferAttribute( this.motionData.color, 1 ) );
-        //		geometry.computeBoundingSphere();
-		var mesh = new THREE.Line( geometry, this.material2D );
-		mesh.name="2DWorkpiece";
+		var geometry = new THREE.Geometry();
+		// var geometry = new THREE.BufferGeometry();
+		// var positions = new Float32Array([R,0,0, R,0,L, 0,0,L, 0,0,0, R,0,0]);
+        // geometry.addAttribute( 'position', new THREE.BufferAttribute(positions,3));
+
+		geometry.vertices.push( new THREE.Vector3(R,0,0), new THREE.Vector3(R,0,L) , new THREE.Vector3(0,0,L),
+								new THREE.Vector3(0,0,0), new THREE.Vector3(R,0,0) );
+		geometry.computeLineDistances();
+
+		var material = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 1 } );
+		
+		var mesh = new THREE.Line( geometry, material );
+		mesh.name="2DWorkpieceDash";
 		mesh.rotation.x=Math.PI/2;
 		mesh.rotation.y=Math.PI/2;
 		mesh.position.x = -this.workpiece.z/2;
-		return mesh;
+        mesh.visible = true;
+        
+        this.meshes.meshWorkpiece = true;
+		this.meshWorkpiece = mesh;
 	};
 
-CWS.Lathe.prototype.create3DWorkpiece = function () 
+CWS.Lathe.prototype._create3DWorkpiece = function () 
 	{
-		if (!this.motionData.run3D)
-            return {name:"3DWorkpiece"};
 		var radius = this.workpiece.x/2.0;
-
 		this.gl.useProgram(this.shaderProgram);
 		// Delete the last buffer
 		if (this.linesVertexPositionBuffer!=undefined)
@@ -312,6 +294,4 @@ CWS.Lathe.prototype.create3DWorkpiece = function ()
 			this.dataLevel1[i/4]=0;
 		};
         this.generateLatheGeometry();
-        this.mesh3D.position.x = -this.workpiece.z/2;
-		return this.mesh3D;
 	};

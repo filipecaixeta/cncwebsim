@@ -15,7 +15,9 @@ CWS.Mill = function (options)
         this.mtype="Mill";
 
         this.initWebGL();
-        this.initMesh();
+        this.initGeometry2D();
+        this.initGeometry3D();
+        this.create2DWorkpieceLimits();
 	}
 
 CWS.Mill.prototype = Object.create( CWS.Machine.prototype );
@@ -71,7 +73,7 @@ CWS.Mill.prototype.initWebGL = function ()
         this.gl.clearColor(0.0,0.0,0.0,0.0);
     };
 
-CWS.Mill.prototype.initMesh = function ()
+CWS.Mill.prototype.initGeometry3D = function ()
     {
         var tempDim = Math.max(this.workpiece.x,this.workpiece.y)+this.tool.radius*2;
         this.renderDimensions = new THREE.Vector3(tempDim,tempDim,this.workpiece.z);
@@ -79,11 +81,11 @@ CWS.Mill.prototype.initMesh = function ()
         var minY = Math.round(this.tool.radius*this.renderResolution/this.renderDimensions.y);
         var maxX = Math.round((parseFloat(this.workpiece.x)+this.tool.radius)*this.renderResolution/this.renderDimensions.x);
         var maxY = Math.round((parseFloat(this.workpiece.y)+this.tool.radius)*this.renderResolution/this.renderDimensions.y);
+        
         var geometry = new THREE.PlaneBufferGeometry( this.workpiece.x, this.workpiece.y,
                             maxX-minX+1, maxY-minY+1 );
             geometry.dim = {x:maxX-minX+2,y:maxY-minY+2};
             geometry.dynamic = true;
-            geometry.attributes.position.dynamic = true;
             if ( geometry.attributes.normal === undefined ) 
             {
                 geometry.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( geometry.attributes.position.array.length ), 3 ) );
@@ -132,7 +134,65 @@ CWS.Mill.prototype.initMesh = function ()
         }
         var mesh = new THREE.Mesh( geometry, this.material3D);
             mesh.name="3DWorkpiece";
+        mesh.position.x = -this.workpiece.x/2;
+        mesh.position.y = -this.workpiece.y/2;
+        mesh.position.z = -this.workpiece.z/2;
         this.mesh3D = mesh;
+    };
+
+CWS.Mill.prototype.initGeometry2D = function () 
+    {
+        var geometry = new THREE.BufferGeometry();
+        geometry.boundingSphere = new THREE.Sphere( new THREE.Vector3(0,0,0),99999);
+        geometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array([0,0,0,0,0,0]) ,3));
+        geometry.addAttribute( 'vcolor', new THREE.BufferAttribute( new Float32Array([0,0]) ,1 ));
+        geometry.attributes.position.dynamic = true;
+        geometry.attributes.vcolor.dynamic = true;
+        geometry.setDrawRange(0,Infinity);
+        var mesh = new THREE.LineSegments( geometry, this.material2D );
+        mesh.name = "2DWorkpiece";
+        mesh.position.x = -this.workpiece.x/2;
+        mesh.position.y = -this.workpiece.y/2;
+        mesh.position.z = -this.workpiece.z/2;
+        this.mesh2D = mesh;
+    };
+
+CWS.Mill.prototype.create2DWorkpieceLimits = function () 
+    {
+        if (this.meshes.meshWorkpiece === true)
+            return;
+        
+        var x=this.workpiece.x;
+        var y=this.workpiece.y;
+        var z=this.workpiece.z;
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push( 
+            new THREE.Vector3(x*0,y*0,z*0),new THREE.Vector3(x*1,y*0,z*0),
+            new THREE.Vector3(x*1,y*0,z*0),new THREE.Vector3(x*1,y*0,z*1),
+            new THREE.Vector3(x*1,y*0,z*1),new THREE.Vector3(x*0,y*0,z*1),
+            new THREE.Vector3(x*0,y*0,z*1),new THREE.Vector3(x*0,y*0,z*0),
+            new THREE.Vector3(x*0,y*0,z*0),new THREE.Vector3(x*0,y*1,z*0),
+            new THREE.Vector3(x*0,y*0,z*1),new THREE.Vector3(x*0,y*1,z*1),
+            new THREE.Vector3(x*1,y*0,z*1),new THREE.Vector3(x*1,y*1,z*1),
+            new THREE.Vector3(x*1,y*0,z*0),new THREE.Vector3(x*1,y*1,z*0),
+            new THREE.Vector3(x*0,y*1,z*0),new THREE.Vector3(x*1,y*1,z*0),
+            new THREE.Vector3(x*1,y*1,z*0),new THREE.Vector3(x*1,y*1,z*1),
+            new THREE.Vector3(x*1,y*1,z*1),new THREE.Vector3(x*0,y*1,z*1),
+            new THREE.Vector3(x*0,y*1,z*1),new THREE.Vector3(x*0,y*1,z*0));
+        geometry.computeLineDistances();
+
+        var material = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 1 } );
+        
+        var mesh = new THREE.Line( geometry, material );
+        mesh.name="2DWorkpieceDash";
+        mesh.position.x = -this.workpiece.x/2;
+        mesh.position.y = -this.workpiece.y/2;
+        mesh.position.z = -this.workpiece.z/2;
+
+        mesh.visible = true;
+        
+        this.meshes.meshWorkpiece = true;
+        this.meshWorkpiece = mesh;
     };
 
 CWS.Mill.prototype.updateWorkpieceDimensions = function ()
@@ -212,52 +272,6 @@ CWS.Mill.prototype.setRendererResolution = function (renderResolution)
         this.gl.viewportHeight = this.renderResolution;
         this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
     };
-
-CWS.Mill.prototype.create2DWorkpiece = function () 
-	{
-        if (!this.motionData.run2D)
-            return {name:"2DWorkpiece"};
-		var geometry = new THREE.BufferGeometry();
-		geometry.addAttribute( 'position', new THREE.BufferAttribute( this.motionData.positions, 3 ) );
-		geometry.addAttribute( 'vcolor', new THREE.BufferAttribute( this.motionData.color, 1 ) );
-		geometry.computeBoundingSphere();
-		var mesh = new THREE.Line( geometry, this.material2D );
-		mesh.name="2DWorkpiece";
-        mesh.position.x = -this.workpiece.x/2;
-        mesh.position.y = -this.workpiece.y/2;
-        mesh.position.z = -this.workpiece.z/2;
-		return mesh;
-	};
-
-CWS.Mill.prototype.create2DWorkpieceLimits = function () 
-	{
-		var x=this.workpiece.x;
-		var y=this.workpiece.y;
-        var z=this.workpiece.z;
-		var lineGeometry = new THREE.Geometry();
-		var vertArray = lineGeometry.vertices;
-		vertArray.push( 
-            new THREE.Vector3(x*0,y*0,z*0),new THREE.Vector3(x*1,y*0,z*0),
-            new THREE.Vector3(x*1,y*0,z*0),new THREE.Vector3(x*1,y*0,z*1),
-            new THREE.Vector3(x*1,y*0,z*1),new THREE.Vector3(x*0,y*0,z*1),
-            new THREE.Vector3(x*0,y*0,z*1),new THREE.Vector3(x*0,y*0,z*0),
-            new THREE.Vector3(x*0,y*0,z*0),new THREE.Vector3(x*0,y*1,z*0),
-            new THREE.Vector3(x*0,y*0,z*1),new THREE.Vector3(x*0,y*1,z*1),
-            new THREE.Vector3(x*1,y*0,z*1),new THREE.Vector3(x*1,y*1,z*1),
-            new THREE.Vector3(x*1,y*0,z*0),new THREE.Vector3(x*1,y*1,z*0),
-            new THREE.Vector3(x*0,y*1,z*0),new THREE.Vector3(x*1,y*1,z*0),
-            new THREE.Vector3(x*1,y*1,z*0),new THREE.Vector3(x*1,y*1,z*1),
-            new THREE.Vector3(x*1,y*1,z*1),new THREE.Vector3(x*0,y*1,z*1),
-            new THREE.Vector3(x*0,y*1,z*1),new THREE.Vector3(x*0,y*1,z*0));
-		lineGeometry.computeLineDistances();
-		var lineMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 1 } );
-		var line = new THREE.LineSegments( lineGeometry, lineMaterial );
-		line.name="2DWorkpieceDash";
-        line.position.x = -this.workpiece.x/2;
-        line.position.y = -this.workpiece.y/2;
-        line.position.z = -this.workpiece.z/2;
-		return line;
-	};
 
 CWS.Mill.prototype.createBuffer = function(oldBuffer,data,itemSize,attribute)
     {
@@ -344,10 +358,8 @@ CWS.Mill.prototype.calculatePositionAndTexture = function(dimensions,toolRadius)
         return [positions,texturePos];
     };
 
-CWS.Mill.prototype.create3DWorkpiece = function () 
+CWS.Mill.prototype._create3DWorkpiece = function () 
 	{	
-        if (!this.motionData.run3D)
-            return {name:"3DWorkpiece"};
         // this.toolTexture = this.createToolTexture(32,this.tool.angle);
         var dimensions = this.workpiece;
     
@@ -493,8 +505,4 @@ CWS.Mill.prototype.create3DWorkpiece = function ()
 
         attributes.position.needsUpdate = true;
         attributes.normal.needsUpdate = true;
-        this.mesh3D.position.x = -this.workpiece.x/2;
-        this.mesh3D.position.y = -this.workpiece.y/2;
-        this.mesh3D.position.z = -this.workpiece.z/2;
-        return this.mesh3D;
 	};
