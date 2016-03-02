@@ -94,7 +94,7 @@ CWS.Printer.prototype._create3DWorkpiece = function ()
 			// p2=[positions[j+3],positions[j+4]];
 			p3=[Ux+p1[0],Uy+p1[1]];
 			p4=[p3[0]+dx,p3[1]+dy];
-			p5=[-Ux+positions[j+0],-Uy+positions[j+1]];
+			p5=[-Ux+p1[0],-Uy+p1[1]];
 			p6=[p5[0]+dx,p5[1]+dy];
 			//     p4   p2   p6
 			//     /    /    /
