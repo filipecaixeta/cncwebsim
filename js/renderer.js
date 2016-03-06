@@ -157,7 +157,7 @@ CWS.Renderer.prototype.render = function (controls)
 
 CWS.Renderer.prototype.animate = function (b,meshName)
 	{
-		if (this[meshName])
+		if (this[meshName] && this[meshName].animation)
 			this[meshName].animation.touggleAnimation();
 	};
 

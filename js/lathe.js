@@ -41,11 +41,11 @@ CWS.Lathe.prototype.initWebGL = function ()
 			throw 'Error creating WebGL context.';
 	    this.gl.enable(this.gl.DEPTH_TEST);
 
-	    this.shaderProgram = this.createProgram(this.gl, CWS.SHADER["vs-lathe-3D"], CWS.SHADER["fs-lathe-3D"]);
+	    this.shaderProgram1 = this.createProgram(this.gl, CWS.SHADER["vs-lathe-1-3D"], CWS.SHADER["fs-lathe-1-3D"]);
 
-	    this.shaderProgram.workpieceLengthUniform = this.gl.getUniformLocation(this.shaderProgram, "workpieceLength");
-	    this.shaderProgram.workpieceRadiusUniform = this.gl.getUniformLocation(this.shaderProgram, "workpieceRadius");
-	    this.shaderProgram.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram, "position");
+	    this.shaderProgram1.workpieceLengthUniform = this.gl.getUniformLocation(this.shaderProgram1, "workpieceLength");
+	    this.shaderProgram1.workpieceRadiusUniform = this.gl.getUniformLocation(this.shaderProgram1, "workpieceRadius");
+	    this.shaderProgram1.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram1, "position");
 
 	    this.setRendererResolution(this.renderResolution);
 	    this.gl.clearColor(1.0,1.0,1.0,1.0);
@@ -98,6 +98,7 @@ CWS.Lathe.prototype.initGeometry2D = function ()
 
 CWS.Lathe.prototype.initGeometry3D = function () 
 	{
+		this.material3D.shading = THREE.SmoothShading;
 		var segments = this.segments;
         var phiStart = 0;
         var phiLength = 2*Math.PI;
@@ -250,7 +251,7 @@ CWS.Lathe.prototype.create2DWorkpieceLimits = function ()
 CWS.Lathe.prototype._create3DWorkpiece = function () 
 	{
 		var radius = this.workpiece.x/2.0;
-		this.gl.useProgram(this.shaderProgram);
+		this.gl.useProgram(this.shaderProgram1);
 		// Delete the last buffer
 		if (this.linesVertexPositionBuffer!=undefined)
             try
@@ -263,13 +264,13 @@ CWS.Lathe.prototype._create3DWorkpiece = function ()
 	    this.gl.bufferData(this.gl.ARRAY_BUFFER, this.motionData.positions, this.gl.STATIC_DRAW);
 	    this.linesVertexPositionBuffer.itemSize = 3;
 	    this.linesVertexPositionBuffer.numItems = this.motionData.positions.length/3;
-	    this.gl.enableVertexAttribArray(this.shaderProgram.vertexPositionAttribute);
+	    this.gl.enableVertexAttribArray(this.shaderProgram1.vertexPositionAttribute);
 		// Clear the deth buffer, and load the uniforms and atrtributes
 		this.gl.clear(this.gl.DEPTH_BUFFER_BIT | this.gl.COLOR_BUFFER_BIT );
-		this.gl.uniform1f(this.shaderProgram.workpieceLengthUniform, this.workpiece.z);
-	    this.gl.uniform1f(this.shaderProgram.workpieceRadiusUniform, radius);
+		this.gl.uniform1f(this.shaderProgram1.workpieceLengthUniform, this.workpiece.z);
+	    this.gl.uniform1f(this.shaderProgram1.workpieceRadiusUniform, radius);
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.linesVertexPositionBuffer);
-		this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, this.linesVertexPositionBuffer.itemSize, this.gl.FLOAT, false, 0, 0);
+		this.gl.vertexAttribPointer(this.shaderProgram1.vertexPositionAttribute, this.linesVertexPositionBuffer.itemSize, this.gl.FLOAT, false, 0, 0);
 		// Draw the lines
 		this.gl.drawArrays(this.gl.LINE_STRIP, 0, this.linesVertexPositionBuffer.numItems);
 		// Draw everything as points to make sure vertical lines will also be rendered

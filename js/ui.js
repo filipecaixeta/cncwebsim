@@ -318,16 +318,12 @@ CWS.DialogBox.prototype.workpieceDimensions = function (controller)
             html = '<form id="workpieceDimensions">'+
             '<ul>'+
             '  <li>'+
-            '    <label for= "x" >Size X</label>'+
-            '    <input type= "text" name= "x" value="'+workpiece.x+'"/>'+
+            '    <label for= "filamentDiameter" >Filament Diameter</label>'+
+            '    <input type= "text" name="filamentDiameter" value="'+workpiece.filamentDiameter+'"/>'+
             '  </li>'+
             '  <li>'+
-            '    <label for= "y" >Size Y</label>'+
-            '    <input type= "text" name= "y" value="'+workpiece.y+'"/>'+
-            '  </li>'+
-            '   <li>'+
-            '    <label for= "z" >Size Z</label>'+
-            '    <input type= "text" name= "z" value="'+workpiece.z+'"/>'+
+            '    <label for= "layerHeight" >Layer Height</label>'+
+            '    <input type= "text" name= "layerHeight" value="'+workpiece.layerHeight+'"/>'+
             '  </li>'+
             '</ul></form>';
         }

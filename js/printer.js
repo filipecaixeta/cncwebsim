@@ -69,7 +69,7 @@ CWS.Printer.prototype._create3DWorkpiece = function ()
         var index = new Uint32Array( l*4 );
 
 		// d = data.header.workpiece.diameter;
-		var d=0.4/2;
+		var d=this.workpiece.layerHeight/2;
 		var iv=0;
 		var j=0;
 		var ii=0;

@@ -25,8 +25,8 @@ CWS.Machine = function (options)
 				g2: { type: "c", value: this.lineColors.g2 },
 				g3: { type: "c", value: this.lineColors.g3 }
 			},
-			vertexShader: CWS.SHADER["vs-lathe-mill-2D"],
-			fragmentShader: CWS.SHADER["fs-lathe-mill-2D"],
+			vertexShader: CWS.SHADER["vs-2D"],
+			fragmentShader: CWS.SHADER["fs-2D"],
 			linewidth: 1,
 		});
 	}

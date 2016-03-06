@@ -75,6 +75,7 @@ CWS.Mill.prototype.initWebGL = function ()
 
 CWS.Mill.prototype.initGeometry3D = function ()
     {
+        this.material3D.shading = THREE.FlatShading;
         var tempDim = Math.max(this.workpiece.x,this.workpiece.y)+this.tool.radius*2;
         this.renderDimensions = new THREE.Vector3(tempDim,tempDim,this.workpiece.z);
         var minX = Math.round(this.tool.radius*this.renderResolution/this.renderDimensions.x);
@@ -197,7 +198,7 @@ CWS.Mill.prototype.create2DWorkpieceLimits = function ()
 
 CWS.Mill.prototype.updateWorkpieceDimensions = function ()
     {
-        this.initMesh();
+        this.create3DWorkpiece();
     }
 
 CWS.Mill.prototype.updateTool = function ()
