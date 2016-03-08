@@ -15,7 +15,7 @@ body
 	right: 450px;
 	overflow: hidden;
 	height: 45px;
-	position: relative;
+	position: fixed;
 	margin: 0px;
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
