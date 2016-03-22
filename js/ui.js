@@ -117,8 +117,8 @@ CWS.UI.prototype.constructor = CWS.UI;
 
 CWS.UI.prototype.resize = function()
 	{
-		var width = this.elementBody.innerWidth();
-		var height = this.elementBody.innerHeight();
+		var width = window.innerWidth;
+		var height = window.innerHeight;
 		
 		var editorWidth;
 		if (this.elementEditor.css('display')==='none')
