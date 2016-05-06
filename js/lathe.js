@@ -93,7 +93,7 @@ CWS.Lathe.prototype.initGeometry2D = function ()
 		mesh.rotation.x = Math.PI/2;
 		mesh.rotation.y = Math.PI/2;
 		mesh.position.x = -this.workpiece.z/2;
-        this.mesh2D = mesh;
+        this.mesh2D = mesh; 
     }
 
 CWS.Lathe.prototype.initGeometry3D = function () 
@@ -295,4 +295,5 @@ CWS.Lathe.prototype._create3DWorkpiece = function ()
 			this.dataLevel1[i/4]=0;
 		};
         this.generateLatheGeometry();
+        this.mesh3D.position.x = -this.workpiece.z/2;
 	};

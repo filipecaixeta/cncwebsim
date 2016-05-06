@@ -48,7 +48,7 @@ CWS.Controller = function (editor,storage,renderer,motion,autoRun)
         document.getElementById("canvasContainer").appendChild(renderer.domElement);
         // Set renderer size
         this.windowResize();
-        // Save changes every 5 seconds
+        // Save changes every 60 seconds
         setInterval(function () 
             {
                 if (controller.saveFlag===0)
@@ -230,6 +230,7 @@ CWS.Controller.prototype.setWorkpieceDimensions = function(dimensions)
         {
             this.runInterpreter();
         }
+        this.updateWireframe();
 	};
 
 CWS.Controller.prototype.exportToOBJ = function()
