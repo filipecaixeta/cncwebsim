@@ -121,6 +121,14 @@ CWS.Controller.prototype.listProjects = function()
 CWS.Controller.prototype.openProject = function(projectName)
 	{
 		this.storage.loadProject(projectName,true);
+
+        // For old versions
+        if (this.storage.machineType==="Lathe" && this.storage.machine.tool===undefined)
+            {
+                var machine = this.storage.machine;
+                machine.tool = {radius:2,angle:0};
+                this.storage.machine = machine;
+            }
         this.loadMachine();
 		this.editor.setCode(this.storage.code);
 	};

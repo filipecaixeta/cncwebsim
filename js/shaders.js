@@ -11,10 +11,10 @@ CWS.SHADER["function-to16BitValue"] =
 	"vec2 to16BitValue(float value)\n"+
 	"{\n"+
 	"	vec2 v;\n"+
-	"	v.x = floor(value/256.0+0.5);\n"+
+	"	v.x = floor(value/256.0);\n"+
 	"	v.y = value-v.x*256.0;\n"+
-	"	v.x = v.x/256.0;\n"+
-	"	v.y = v.y/256.0;\n"+
+	"	v.x = v.x/255.0;\n"+
+	"	v.y = v.y/255.0;\n"+
 	"	return v;\n"+
 	"}\n";
 

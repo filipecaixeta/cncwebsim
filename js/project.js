@@ -18,6 +18,7 @@ CWS.Project.createDefaultMachine = function (machine)
 				maxSpindleRPM: 100,
 				home1:{x:100,y:0,z:200},
 				home2:{x:0,y:0,z:0},
+				tool:{radius:2,angle:0},
 			};
 		}
 		else if (machine=="Mill")

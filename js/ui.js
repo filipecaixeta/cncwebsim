@@ -117,8 +117,8 @@ CWS.UI.prototype.constructor = CWS.UI;
 
 CWS.UI.prototype.resize = function()
 	{
-		var width = window.innerWidth;
-		var height = window.innerHeight;
+		var width = this.elementBody.innerWidth();
+		var height = this.elementBody.innerHeight();
 		
 		var editorWidth;
 		if (this.elementEditor.css('display')==='none')
@@ -355,17 +355,32 @@ CWS.DialogBox.prototype.workpieceDimensions = function (controller)
 CWS.DialogBox.prototype.tool = function (controller)
 	{
 		var machineType = controller.getMachineType();
-		if (machineType!="Mill")
+		if (machineType==="Lathe")
 		{
-			var html = 	'<ul><li>'+machineType+' does not support tool settings</li></ul>';
+			var machine = controller.getMachine();
+			var html = 	'<form id="menuTool">'+
+						'<ul>'+
+						'  <li>'+
+						'    <label for= "toolradius" >Tool radius</label>'+
+						'    <input type= "text" name= "toolradius" value="'+machine.tool.radius+'"/>'+
+						'  </li>'+
+						'</ul>'+
+						'</form>';
 			this.dialog.append($(html));
 			this.dialog.dialog(
 		      {
 		      width: 400,
 		      buttons: 
 		        {
-		            "Ok": function()
+		            "Save": function()
 		            {
+		            	var values = {};
+		            	var result = $(this.firstChild).serializeArray();
+		            	for (var i = 0; i < result.length; i++) 
+		            	{
+		            		values[result[i].name]=parseFloat(result[i].value);
+		            	}
+		              	controller.setMachineTool(values);
 		              	$(this).dialog("close");
 		            },
 		          	"Cancel": function()
@@ -375,7 +390,7 @@ CWS.DialogBox.prototype.tool = function (controller)
 		        }
 		      });
 		}
-		else
+		else if (machineType==="Mill")
 		{
 			var machine = controller.getMachine();
 			var html = 	'<form id="menuTool">'+
@@ -405,6 +420,26 @@ CWS.DialogBox.prototype.tool = function (controller)
 		            		values[result[i].name]=parseFloat(result[i].value);
 		            	}
 		              	controller.setMachineTool(values);
+		              	$(this).dialog("close");
+		            },
+		          	"Cancel": function()
+		            {
+	          			$(this).dialog("close");
+		            }
+		        }
+		      });
+		}
+		else
+		{
+			var html = 	'<ul><li>'+machineType+' does not support tool settings</li></ul>';
+			this.dialog.append($(html));
+			this.dialog.dialog(
+		      {
+		      width: 400,
+		      buttons: 
+		        {
+		            "Ok": function()
+		            {
 		              	$(this).dialog("close");
 		            },
 		          	"Cancel": function()
