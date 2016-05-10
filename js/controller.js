@@ -48,7 +48,7 @@ CWS.Controller = function (editor,storage,renderer,motion,autoRun)
         document.getElementById("canvasContainer").appendChild(renderer.domElement);
         // Set renderer size
         this.windowResize();
-        // Save changes every 5 seconds
+        // Save changes every 60 seconds
         setInterval(function () 
             {
                 if (controller.saveFlag===0)
@@ -121,6 +121,14 @@ CWS.Controller.prototype.listProjects = function()
 CWS.Controller.prototype.openProject = function(projectName)
 	{
 		this.storage.loadProject(projectName,true);
+
+        // For old versions
+        if (this.storage.machineType==="Lathe" && this.storage.machine.tool===undefined)
+            {
+                var machine = this.storage.machine;
+                machine.tool = {radius:2,angle:0};
+                this.storage.machine = machine;
+            }
         this.loadMachine();
 		this.editor.setCode(this.storage.code);
 	};
@@ -148,7 +156,7 @@ CWS.Controller.prototype.loadMachine = function()
                 machine: this.storage.machine,
                 material3D: this.material3D,
                 workpiece: this.storage.workpiece,
-                renderResolution: 512});
+                renderResolution: 4048});
             this.renderer.lookAtMill({x:this.storage.workpiece.x,
                         y:this.storage.workpiece.y,z:this.storage.workpiece.z});
             this.renderer.addMesh("2DWorkpiece",this.machine.mesh2D);
@@ -230,6 +238,7 @@ CWS.Controller.prototype.setWorkpieceDimensions = function(dimensions)
         {
             this.runInterpreter();
         }
+        this.updateWireframe();
 	};
 
 CWS.Controller.prototype.exportToOBJ = function()

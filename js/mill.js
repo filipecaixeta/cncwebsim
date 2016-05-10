@@ -198,16 +198,23 @@ CWS.Mill.prototype.create2DWorkpieceLimits = function ()
 
 CWS.Mill.prototype.updateWorkpieceDimensions = function ()
     {
+        this.meshes.mesh3D = false;
+        this.meshes.meshWorkpiece = false;
         this.create3DWorkpiece();
+        this.create2DWorkpieceLimits();
     }
 
 CWS.Mill.prototype.updateTool = function ()
     {
-        this.initMesh();
+        // this.initGeometry3D();
+        this.meshes.mesh3D = false;
+        this.create3DWorkpiece();
     }
 
 CWS.Mill.prototype.updateRendererResolution = function ()
     {
+        // TRETA AQUI
+        // CONSERTAR ISSO DEPOIS
         this.initMesh();
     }
 
@@ -420,7 +427,7 @@ CWS.Mill.prototype._create3DWorkpiece = function ()
                     var z = this.renderDimensions.z-dataview2.getUint16(arrayPos1)*zDist;
                     positions[arrayPos2+0] = (xi-minX)/(this.renderResolution-1)*this.renderDimensions.x;
                     positions[arrayPos2+1] = (yi-minY)/(this.renderResolution-1)*this.renderDimensions.y;
-                    positions[arrayPos2+2] =z;
+                    positions[arrayPos2+2] = z;
                 }
                 else
                 {
@@ -506,4 +513,8 @@ CWS.Mill.prototype._create3DWorkpiece = function ()
 
         attributes.position.needsUpdate = true;
         attributes.normal.needsUpdate = true;
+        
+        this.mesh3D.position.x = -this.workpiece.x/2;
+        this.mesh3D.position.y = -this.workpiece.y/2;
+        this.mesh3D.position.z = -this.workpiece.z/2;
 	};

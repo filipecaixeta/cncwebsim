@@ -101,6 +101,15 @@ CWS.Machine.prototype.updateRendererResolution = function ()
 CWS.Machine.prototype.create2DWorkpiece = function () 
 	{
 		this.mesh2D.visible = true;
+		// MAYBE MISSING SOMETHING ABOUT POSITION
+		if (this.machine.mtype==="Lathe")
+    		this.mesh2D.position.x = -this.workpiece.z/2;
+    	else
+    	{
+	    	this.mesh2D.position.x = -this.workpiece.x/2;
+	        this.mesh2D.position.y = -this.workpiece.y/2;
+	        this.mesh2D.position.z = -this.workpiece.z/2;
+    	}
 		if (this.meshes.mesh2D === true)
 			return;
 
@@ -162,6 +171,7 @@ CWS.Machine.prototype.create2DWorkpiece = function ()
 CWS.Machine.prototype.create3DWorkpiece = function () 
 	{
 		this.mesh3D.visible = true;
+        
         if (this.meshes.mesh3D === true)
             return;
 
@@ -170,6 +180,5 @@ CWS.Machine.prototype.create3DWorkpiece = function ()
         this.mesh3D.geometry.setDrawRange(0,Infinity);
         this.mesh3D.visible = true;
         this.meshes.mesh3D = true;
-
         return this.mesh3D;
 	};

@@ -12,7 +12,7 @@ CWS.Lathe = function (options)
 		this.canvas = null;
 		this.gl = null;
 		this.mtype="Lathe";
-
+		this.tool = this.machine.tool;
 		this.initWebGL();
 		this.initGeometry2D();
         this.initGeometry3D();
@@ -67,6 +67,12 @@ CWS.Lathe.prototype.updateRendererResolution = function ()
         this.create3DWorkpiece();
     }
 
+CWS.Lathe.prototype.updateTool = function ()
+    {
+        this.meshes.mesh3D = false;
+        this.create3DWorkpiece();
+    }
+
 CWS.Lathe.prototype.setRendererResolution = function (renderResolution) 
 	{
 		this.renderResolution = renderResolution || this.renderResolution;
@@ -93,7 +99,7 @@ CWS.Lathe.prototype.initGeometry2D = function ()
 		mesh.rotation.x = Math.PI/2;
 		mesh.rotation.y = Math.PI/2;
 		mesh.position.x = -this.workpiece.z/2;
-        this.mesh2D = mesh;
+        this.mesh2D = mesh; 
     }
 
 CWS.Lathe.prototype.initGeometry3D = function () 
@@ -183,7 +189,7 @@ CWS.Lathe.prototype.generateLatheGeometry = function ()
         var segments = this.segments;
 		var SlicesX = this.renderResolution;
         var L = this.workpiece.z;
-		var seg = L/this.dataLevel1.length;
+		var seg = L/(SlicesX-1);
 		var z=0;
 		var iv=0;
         var sinTable = this.sinTable;
@@ -195,7 +201,7 @@ CWS.Lathe.prototype.generateLatheGeometry = function ()
             vertices[iv++] = 0;
             vertices[iv++] = 0;
         }
-		for ( var ix = 1; ix < SlicesX; ix++,z+=seg) 
+		for ( var ix = 0; ix < SlicesX; ix++,z+=seg) 
 		{
 			var r=this.dataLevel1[ix];
 			for (var ir=0; ir<segments; ir++)
@@ -294,5 +300,44 @@ CWS.Lathe.prototype._create3DWorkpiece = function ()
 		{
 			this.dataLevel1[i/4]=0;
 		};
+
+		// Filter to reduce noise
+		// this.dataLevel2 = new Float32Array(this.renderResolution);
+		// this.dataLevel2[0]=this.dataLevel1[0];
+		// this.dataLevel2[l/4-1]=this.dataLevel1[l/4-1];
+		// for (i=2; i < l/4-2; i++) 
+		// {
+		// 	this.dataLevel2[i]=(this.dataLevel1[i-2]+this.dataLevel1[i-1]+this.dataLevel1[i]+this.dataLevel1[i+1]+this.dataLevel1[i+2])/5;
+		// };
+		// this.dataLevel1 = this.dataLevel2;
+
+		// Tool radius
+		this.dataLevel2 = new Float32Array(this.renderResolution);
+
+		var toolRadius = this.machine.tool.radius || 2; // mm
+		var seg = this.workpiece.z/(this.renderResolution-1);
+		var segNbr = Math.round(toolRadius/seg); // number of segments
+		if (segNbr<=1)
+		{}
+		else
+		{
+			for (i=segNbr; i < l/4; i++) 
+			{
+				for (j=0; j<segNbr; j++)
+				{
+					this.dataLevel2[i]=Math.min.apply(Math, this.dataLevel1.subarray(i-j,i));
+				}
+			};
+			for (i=1; i < segNbr; i++) 
+			{
+				for (j=0; j<segNbr; j++)
+				{
+					this.dataLevel2[i]=Math.min.apply(Math, this.dataLevel1.subarray(0,i));
+				}
+			};
+			this.dataLevel1 = this.dataLevel2;
+		}
+        
         this.generateLatheGeometry();
+        this.mesh3D.position.x = -this.workpiece.z/2;
 	};
