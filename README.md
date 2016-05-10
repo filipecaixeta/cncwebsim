@@ -2,7 +2,7 @@
 [http://www.cncwebsimulator.com/](http://www.cncwebsimulator.com/)
 
 A CNC simulator for web browser. Written in javascript, css3, and html5. CNC web simulator is capable of generating tool path and also the final 3D workpiece for Lathe, Mill and 3D printer machines. The controller is based on the [Grbl](https://github.com/grbl/grbl). It runs on web browsers with support to [WebGL 1](http://webglreport.com/?v=1) and html5, which means you are able to run on desktop computer, tablets and smartphones without any installation. 
-![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img.png)
+![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img.jpg)
 
 ## Features
 - G-Code editor with syntax highlighting
@@ -31,13 +31,13 @@ Go to [http://www.cncwebsimulator.com/](http://www.cncwebsimulator.com/), choose
 There are several g-code files in the [gcode](https://github.com/filipecaixeta/cncwebsim/tree/master/gcode) directory.
 
 ## Screenshots
-![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img5.png)
-![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img7.png)
-![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img3.png)
-![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img2.png)
-![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img6.png)
-![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img4.png)
-![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img1.png)
+![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img5.jpg)
+![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img7.jpg)
+![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img3.jpg)
+![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img2.jpg)
+![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img6.jpg)
+![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img4.jpg)
+![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img1.jpg)
 
 ## Problems?
 If you found a bug plese submit [here](https://github.com/filipecaixeta/cncwebsim/issues) or send me an email.
