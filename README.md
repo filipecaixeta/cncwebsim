@@ -37,13 +37,14 @@ There are several g-code files in the [gcode](https://github.com/filipecaixeta/c
 [![Milling Video](https://img.youtube.com/vi/MkyDBnkoG4M/0.jpg)](https://www.youtube.com/watch?v=MkyDBnkoG4M)
 
 ## Screenshots
+
+![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/master/doc/img/samsGALAXYs5.png)
 ![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img5.jpg)
 ![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img7.jpg)
 ![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img3.jpg)
 ![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img2.jpg)
 ![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img6.jpg)
 ![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img4.jpg)
-![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img1.jpg)
 
 ## Problems?
 If you found a bug plese submit [here](https://github.com/filipecaixeta/cncwebsim/issues) or send me an email.
