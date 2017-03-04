@@ -1,5 +1,5 @@
 # CNC Web Simulator
-[http://www.cncwebsimulator.com/](http://www.cncwebsimulator.com/)
+[http://filipecaixeta.com.br/cncwebsim/](http://filipecaixeta.com.br/cncwebsim/)
 
 A CNC simulator for web browser. Written in javascript, css3, and html5. CNC web simulator is capable of generating tool path and also the final 3D workpiece for Lathe, Mill and 3D printer machines. The controller is based on the [Grbl](https://github.com/grbl/grbl). It runs on web browsers with support to [WebGL 1](http://webglreport.com/?v=1) and html5, which means you are able to run on desktop computer, tablets and smartphones without any installation.  
 
@@ -26,7 +26,7 @@ A CNC simulator for web browser. Written in javascript, css3, and html5. CNC web
   - Layer settings
 
 ## Usage
-Go to [http://www.cncwebsimulator.com/](http://www.cncwebsimulator.com/), choose a machine and your workpiece settings then you can start typing your g-code.
+Go to [http://filipecaixeta.com.br/cncwebsim/](http://filipecaixeta.com.br/cncwebsim/), choose a machine and your workpiece settings then you can start typing your g-code.
 
 ## Examples
 There are several g-code files in the [gcode](https://github.com/filipecaixeta/cncwebsim/tree/master/gcode) directory.
