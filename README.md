@@ -49,11 +49,6 @@ There are several g-code files in the [gcode](https://github.com/filipecaixeta/c
 ## Problems?
 If you found a bug plese submit [here](https://github.com/filipecaixeta/cncwebsim/issues) or send me an email.
 
-
-## License
-I still have to choose one, so before doing anything, contact me.
-
-
 ## Author
 Visit my personal website at [http://filipecaixeta.github.io/](http://filipecaixeta.github.io/).
 
