@@ -2,11 +2,11 @@
  * @author Filipe Caixeta / http://filipecaixeta.com.br/
  */
 
-CWS.Interpreter = function (machine) 
+CWS.Interpreter = function (machine)
 	{
 		// Mill - Mill, Lathe - Lathe, 3D Printer - Printer
 		this.machineType = machine.mtype;
-		this.modal = 
+		this.modal =
 		{
 			motion:0,                  // {G0,G1,G2,G3,G38.2,G80}
 			feed_rate_mode:94,         // {G93,G94}
@@ -20,7 +20,7 @@ CWS.Interpreter = function (machine)
 			spindle:0,                 // {M3,M4,M5}
 			cutter_comp:40			   // {G40,G41,G42}
 		};
-		this.settings = 
+		this.settings =
 		{
 			g0_speed:10,			   // Speed for G0
 			spindle_speed:0,           // RPM
@@ -30,9 +30,9 @@ CWS.Interpreter = function (machine)
 			line_number:0,             // Last line number sent
 			machine_postion_g53:false, // If true the next modal command will use absolute position and set to false again
 			coord_system:null,         // Current work coordinate system (G54+). Stores offset from absolute machine
-			                           // position in mm. Loaded from EEPROM when called.  
+			                           // position in mm. Loaded from EEPROM when called.
 			coord_offset:{x:0,y:0,z:0},// Retains the G92 coordinate offset (work coordinates) relative to
-			                           // machine zero in mm. Non-persistent. Cleared upon reset and boot.    
+			                           // machine zero in mm. Non-persistent. Cleared upon reset and boot.
 			tool_length_offset:0,      // Tracks tool length offset value when enabled.
 
 			sys_abort:false,
@@ -43,7 +43,7 @@ CWS.Interpreter = function (machine)
 			pos30:machine.home2,
 		};
 		this.toolTable = {};
-		this.coordinateSystemTable = 
+		this.coordinateSystemTable =
 		[								// P0 active system, P1-P6 = G54-G59
 			{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},
 			{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0},{x:0,y:0,z:0,r:0}
@@ -60,7 +60,7 @@ CWS.Interpreter = function (machine)
 		this.invertRadius = 1;
 		if (this.machineType=="Lathe")
 		{
-			this.invertRadius = -1;		
+			this.invertRadius = -1;
 			this.g18({number:18});
 		}
 		else if (this.machineType=="Mill")
@@ -75,18 +75,18 @@ CWS.Interpreter = function (machine)
 		this.stopRunning = false;
 	}
 
-CWS.Interpreter.prototype.runCommand = function (cmd) 
+CWS.Interpreter.prototype.runCommand = function (cmd)
 	{
 		if (!this.stopRunning)
 			return this[cmd.ctype+cmd.number](cmd);
 	};
 
-CWS.Interpreter.prototype.getCommand = function () 
+CWS.Interpreter.prototype.getCommand = function ()
 	{
 		return this.outputCommands.shift();
 	};
 // Create a new entry in the tool table
-CWS.Interpreter.prototype.createTooTableEntry = function (tnumber) 
+CWS.Interpreter.prototype.createTooTableEntry = function (tnumber)
 	{
 		// tnumber	Tool number
 		// x,y,z 	Axis offset
@@ -97,17 +97,17 @@ CWS.Interpreter.prototype.createTooTableEntry = function (tnumber)
 		this.toolTable[tnumber]={x:0,y:0,z:0,i:0,j:0,q:0,r:0};
 	};
 // If a G code is not implemented
-CWS.Interpreter.prototype.g9999  = function (cmd) 
+CWS.Interpreter.prototype.g9999  = function (cmd)
 	{
 		// body...
 	};
 // If a M code is not implemented
-CWS.Interpreter.prototype.m9999  = function (cmd) 
+CWS.Interpreter.prototype.m9999  = function (cmd)
 	{
 		// body...
 	};
 
-CWS.Interpreter.prototype.coordinatesToAbsolute  = function (cmd) 
+CWS.Interpreter.prototype.coordinatesToAbsolute  = function (cmd)
 	{
 	if (this.settings.machine_postion_g53==true)
 	{
@@ -115,7 +115,7 @@ CWS.Interpreter.prototype.coordinatesToAbsolute  = function (cmd)
 		cmd.param.xyz.y = cmd.param.xyz.y===undefined?this.position.y:cmd.param.xyz.y*this.modal.units;
 		cmd.param.xyz.z = cmd.param.xyz.z===undefined?this.position.z:cmd.param.xyz.z*this.modal.units;
 		return;
-	}	
+	}
 	if (this.modal.distance==91)
 	{
 		cmd.param.xyz.x = cmd.param.xyz.x===undefined?this.position.x:cmd.param.xyz.x*this.modal.units+this.position.x;
@@ -132,7 +132,7 @@ CWS.Interpreter.prototype.coordinatesToAbsolute  = function (cmd)
 
 	// Sets the feed rate. If in G93 mode the value will be calculated after the G1|G2|G3 functions
 
-CWS.Interpreter.prototype.f0  = function (cmd) 
+CWS.Interpreter.prototype.f0  = function (cmd)
 	{
 	if (this.modal.feed_rate_mode==93)
 		this.settings.feed_rate93=cmd.param['f'];
@@ -142,7 +142,7 @@ CWS.Interpreter.prototype.f0  = function (cmd)
 	};
 // For 3D printers S word can be time,temperature,voltage etc.
 // For the other machines S is the spindle speed and it cannot be negative
-CWS.Interpreter.prototype.s0  = function (cmd) 
+CWS.Interpreter.prototype.s0  = function (cmd)
 	{
 	if (this.machineType!='3D Printer')
 	{
@@ -167,7 +167,7 @@ CWS.Interpreter.prototype.move3dPrinter  = function (cmd)
 	return false;
 	}
 
-CWS.Interpreter.prototype.g0  = function (cmd) 
+CWS.Interpreter.prototype.g0  = function (cmd)
 	{
 	if (this.move3dPrinter(cmd))
 		return;
@@ -186,7 +186,7 @@ CWS.Interpreter.prototype.g0  = function (cmd)
 	this.outputCommands.push(l);
 	};
 
-CWS.Interpreter.prototype.g1  = function (cmd) 
+CWS.Interpreter.prototype.g1  = function (cmd)
 	{
 	if (this.move3dPrinter(cmd))
 	{
@@ -204,7 +204,7 @@ CWS.Interpreter.prototype.g1  = function (cmd)
 	this.outputCommands.push(l);
 	};
 
-CWS.Interpreter.prototype.g2  = function (cmd) 
+CWS.Interpreter.prototype._rot  = function (cmd, ctype)
 	{
 	if (this.move3dPrinter(cmd))
 		return;
@@ -222,13 +222,13 @@ CWS.Interpreter.prototype.g2  = function (cmd)
 		if (h_x2_div_d < 0)
 			throw new CWS.ErrorParser(cmd.line.lineNumber,"Wrong radius",cmd.line.rawLine);
 		h_x2_div_d = Math.sqrt(h_x2_div_d)/Math.sqrt(d2)*this.invertRadius;
-		// // Invert the sign of h_x2_div_d if the circle is counter clockwise (see sketch below)
-		// if (gc_block.modal.motion == MOTION_MODE_CCW_ARC) { h_x2_div_d = -h_x2_div_d; }  
-		if (cmd.param.r < 0) 
-		{ 
-            h_x2_div_d = -h_x2_div_d; 
+		// Invert the sign of h_x2_div_d if the circle is counter clockwise (see sketch below)
+		if (ctype === 3) { h_x2_div_d = -h_x2_div_d; }
+		if (cmd.param.r < 0)
+		{
+            h_x2_div_d = -h_x2_div_d;
             cmd.param.r = -cmd.param.r;
-        } 
+        }
         cmd.param.ijk[this.axisIJK_0] = 0.5*(x+(y*h_x2_div_d));
         cmd.param.ijk[this.axisIJK_1] = 0.5*(y-(x*h_x2_div_d));
 	}
@@ -243,16 +243,17 @@ CWS.Interpreter.prototype.g2  = function (cmd)
   	arc_tolerance=0.0002 // mm
 
   	angular_travel = Math.atan2(r_axis0*rt_axis1-r_axis1*rt_axis0, r_axis0*rt_axis0+r_axis1*rt_axis1);
-  	// if (angular_travel >= -5e-7) 
-  	// 	angular_travel -= 2*Math.PI;
+	if ((ctype === 2 && angular_travel >= 0.0) ||
+        (ctype === 3 && angular_travel <= 0.0))
+		angular_travel = -angular_travel; // rotate in the correct direction
 
   	segments = Math.floor(Math.abs(0.5*angular_travel*cmd.param.r)/
                           Math.sqrt(arc_tolerance*(2*cmd.param.r-arc_tolerance)) );
 	theta_per_segment = angular_travel/segments;
     linear_per_segment = (cmd.param.xyz[this.axisXYZ_linear] - this.position[this.axisXYZ_linear])/segments;
 
-    cos_T = 2.0 - theta_per_segment*theta_per_segment;
-    sin_T = theta_per_segment*0.16666667*(cos_T + 4.0);
+    var cos_T = 2.0 - theta_per_segment*theta_per_segment;
+    var sin_T = theta_per_segment*0.16666667*(cos_T + 4.0);
     cos_T *= 0.5;
 
     var sin_Ti;
@@ -261,32 +262,19 @@ CWS.Interpreter.prototype.g2  = function (cmd)
     var i;
     var count = 0;
 
-	 //    var l={	x0:this.position.x,x1:center_axis0,
-	// 		z0:this.position.z,z1:center_axis1}
-	// 	l.ctype='r';
-	// 	l.cmd=cmd;
-	// 	this.outputCommands.push(l);
-	// var l={	x0:cmd.param.xyz.x,x1:center_axis0,
-	// 		z0:cmd.param.xyz.z,z1:center_axis1}
-	// 	l.ctype='r';
-	// 	l.cmd=cmd;
-	// 	this.outputCommands.push(l);
-
-
-
-    for (i = 1; i<segments; i++) 
+    for (i = 1; i<segments; i++)
     { // Increment (segments-1).
-      
-      if (count < this.N_ARC_CORRECTION) 
+
+      if (count < this.N_ARC_CORRECTION)
       {
         // Apply vector rotation matrix. ~40 usec
         r_axisi = r_axis0*sin_T + r_axis1*cos_T;
         r_axis0 = r_axis0*cos_T - r_axis1*sin_T;
         r_axis1 = r_axisi;
         count++;
-      } 
-      else 
-      {      
+      }
+      else
+      {
         // Arc correction to radius vector. Computed only every N_ARC_CORRECTION increments. ~375 usec
         // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
         cos_Ti = Math.cos(i*theta_per_segment);
@@ -295,7 +283,7 @@ CWS.Interpreter.prototype.g2  = function (cmd)
         r_axis1 = -cmd.param.ijk[this.axisIJK_0]*sin_Ti - cmd.param.ijk[this.axisIJK_1]*cos_Ti;
         count = 0;
       }
-  		
+
       var pos={};
       pos[this.axisXYZ_0]=center_axis0+r_axis0;
       pos[this.axisXYZ_1]=center_axis1+r_axis1;
@@ -307,7 +295,7 @@ CWS.Interpreter.prototype.g2  = function (cmd)
 		this.position.x=l.x1;
 		this.position.y=l.y1;
 		this.position.z=l.z1;
-		l.ctype=2;
+		l.ctype=ctype;
 		l.cmd=cmd;
 		this.outputCommands.push(l);
     }
@@ -318,7 +306,7 @@ CWS.Interpreter.prototype.g2  = function (cmd)
 		this.position.x=l.x1;
 		this.position.y=l.y1;
 		this.position.z=l.z1;
-		l.ctype=2;
+		l.ctype=ctype;
 		l.cmd=cmd;
 		this.outputCommands.push(l);
 
@@ -327,135 +315,22 @@ CWS.Interpreter.prototype.g2  = function (cmd)
 	this.position.z=cmd.param.xyz.z;
 	};
 
-CWS.Interpreter.prototype.g3  = function (cmd) 
-	{	
-	if (this.move3dPrinter(cmd))
-		return;
-	this.coordinatesToAbsolute(cmd);
-	var x = cmd.param.xyz[this.axisXYZ_0]-this.position[this.axisXYZ_0];
-	var y = cmd.param.xyz[this.axisXYZ_1]-this.position[this.axisXYZ_1];
-	var z = cmd.param.xyz[this.axisXYZ_linear];
-	var i,j;
+CWS.Interpreter.prototype.g2  = function (cmd)
+    {
+		return this._rot(cmd, 2);
+	};
 
-	if (cmd.param.r !== undefined)
-	{
-		cmd.param.r *= this.modal.units;
-		var d2=x*x+y*y;
-		var h_x2_div_d = 4.0*cmd.param.r*cmd.param.r-x*x-y*y;
-		if (h_x2_div_d < 0)
-			throw new CWS.ErrorParser(cmd.line.lineNumber,"Wrong radius",cmd.line.rawLine);
-		h_x2_div_d = -Math.sqrt(h_x2_div_d)/Math.sqrt(d2)*this.invertRadius;
-		// // Invert the sign of h_x2_div_d if the circle is counter clockwise (see sketch below)
-		// if (gc_block.modal.motion == MOTION_MODE_CCW_ARC) { h_x2_div_d = -h_x2_div_d; }  
-		if (cmd.param.r < 0) 
-		{ 
-            h_x2_div_d = -h_x2_div_d; 
-            cmd.param.r = -cmd.param.r;
-        } 
-        cmd.param.ijk[this.axisIJK_0] = 0.5*(x+(y*h_x2_div_d));
-        cmd.param.ijk[this.axisIJK_1] = 0.5*(y-(x*h_x2_div_d));
+CWS.Interpreter.prototype.g3  = function (cmd)
+    {
+		return this._rot(cmd, 3);
 	}
 
-	var center_axis0 = this.position[this.axisXYZ_0] + cmd.param.ijk[this.axisIJK_0];
-  	var center_axis1 = this.position[this.axisXYZ_1] + cmd.param.ijk[this.axisIJK_1];
-  	var r_axis0 = -cmd.param.ijk[this.axisIJK_0];  // Radius vector from center to current location
-  	var r_axis1 = -cmd.param.ijk[this.axisIJK_1];
-  	var rt_axis0 = cmd.param.xyz[this.axisXYZ_0] - center_axis0;
-  	var rt_axis1 = cmd.param.xyz[this.axisXYZ_1] - center_axis1;
-
-  	arc_tolerance=0.0002 // mm
-
-  	angular_travel = Math.atan2(r_axis0*rt_axis1-r_axis1*rt_axis0, r_axis0*rt_axis0+r_axis1*rt_axis1);
-  	// if (angular_travel >= -5e-7) 
-  	// 	angular_travel -= 2*Math.PI;
-
-  	segments = Math.floor(Math.abs(0.5*angular_travel*cmd.param.r)/
-                          Math.sqrt(arc_tolerance*(2*cmd.param.r-arc_tolerance)) );
-	theta_per_segment = angular_travel/segments;
-    linear_per_segment = (cmd.param.xyz[this.axisXYZ_linear] - this.position[this.axisXYZ_linear])/segments;
-
-    cos_T = 2.0 - theta_per_segment*theta_per_segment;
-    sin_T = theta_per_segment*0.16666667*(cos_T + 4.0);
-    cos_T *= 0.5;
-
-    var sin_Ti;
-    var cos_Ti;
-    var r_axisi;
-    var i;
-    var count = 0;
-
-	 //    var l={	x0:this.position.x,x1:center_axis0,
-	// 		z0:this.position.z,z1:center_axis1}
-	// 	l.ctype='r';
-	// 	l.cmd=cmd;
-	// 	this.outputCommands.push(l);
-	// var l={	x0:cmd.param.xyz.x,x1:center_axis0,
-	// 		z0:cmd.param.xyz.z,z1:center_axis1}
-	// 	l.ctype='r';
-	// 	l.cmd=cmd;
-	// 	this.outputCommands.push(l);
-
-
-
-    for (i = 1; i<segments; i++) 
-    { // Increment (segments-1).
-      
-      if (count < this.N_ARC_CORRECTION) 
-      {
-        // Apply vector rotation matrix. ~40 usec
-        r_axisi = r_axis0*sin_T + r_axis1*cos_T;
-        r_axis0 = r_axis0*cos_T - r_axis1*sin_T;
-        r_axis1 = r_axisi;
-        count++;
-      } 
-      else 
-      {      
-        // Arc correction to radius vector. Computed only every N_ARC_CORRECTION increments. ~375 usec
-        // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
-        cos_Ti = Math.cos(i*theta_per_segment);
-        sin_Ti = Math.sin(i*theta_per_segment);
-        r_axis0 = -cmd.param.ijk[this.axisIJK_0]*cos_Ti + cmd.param.ijk[this.axisIJK_1]*sin_Ti;
-        r_axis1 = -cmd.param.ijk[this.axisIJK_0]*sin_Ti - cmd.param.ijk[this.axisIJK_1]*cos_Ti;
-        count = 0;
-      }
-  		
-      var pos={};
-      pos[this.axisXYZ_0]=center_axis0+r_axis0;
-      pos[this.axisXYZ_1]=center_axis1+r_axis1;
-      pos[this.axisXYZ_linear]=linear_per_segment*i+z;
-
-      var l={	x0:this.position.x,x1:pos.x,
-				y0:this.position.y,y1:pos.y,
-				z0:this.position.z,z1:pos.z}
-		this.position.x=l.x1;
-		this.position.y=l.y1;
-		this.position.z=l.z1;
-		l.ctype=3;
-		l.cmd=cmd;
-		this.outputCommands.push(l);
-    }
-
-    var l={	x0:this.position.x,x1:cmd.param.xyz.x,
-    		y0:this.position.y,y1:cmd.param.xyz.y,
-			z0:this.position.z,z1:cmd.param.xyz.z}
-		this.position.x=l.x1;
-		this.position.y=l.y1;
-		this.position.z=l.z1;
-		l.ctype=3;
-		l.cmd=cmd;
-		this.outputCommands.push(l);
-
-  	this.position.x=cmd.param.xyz.x;
-  	this.position.y=cmd.param.xyz.y;
-	this.position.z=cmd.param.xyz.z;
-	};
-
-CWS.Interpreter.prototype.g4  = function (cmd) 
+CWS.Interpreter.prototype.g4  = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.g10 = function (cmd) 
+CWS.Interpreter.prototype.g10 = function (cmd)
 	{
 	var l=Math.round(cmd.param['l']);
 	delete cmd.param['l'];
@@ -479,7 +354,7 @@ CWS.Interpreter.prototype.g10 = function (cmd)
 	// L10,L11 Not implemented
 	};
 
-CWS.Interpreter.prototype.g17 = function (cmd) 
+CWS.Interpreter.prototype.g17 = function (cmd)
 	{
 	this.plane_select=cmd.number;
 	this.axisXYZ_0='x';
@@ -490,7 +365,7 @@ CWS.Interpreter.prototype.g17 = function (cmd)
 	this.axisIJK_linear='k';
 	};
 
-CWS.Interpreter.prototype.g18 = function (cmd) 
+CWS.Interpreter.prototype.g18 = function (cmd)
 	{
 	this.plane_select=cmd.number;
 	this.axisXYZ_0='x';
@@ -501,7 +376,7 @@ CWS.Interpreter.prototype.g18 = function (cmd)
 	this.axisIJK_linear='j';
 	};
 
-CWS.Interpreter.prototype.g19 = function (cmd) 
+CWS.Interpreter.prototype.g19 = function (cmd)
 	{
 	this.plane_select=cmd.number;
 	this.axisXYZ_0='y';
@@ -512,62 +387,62 @@ CWS.Interpreter.prototype.g19 = function (cmd)
 	this.axisIJK_linear='i';
 	};
 
-CWS.Interpreter.prototype.g20 = function (cmd) 
+CWS.Interpreter.prototype.g20 = function (cmd)
 	{
 	this.modal.units = 25.4;
 	};
 
-CWS.Interpreter.prototype.g21 = function (cmd) 
+CWS.Interpreter.prototype.g21 = function (cmd)
 	{
 	this.modal.units = 1.0;
 	};
 // Go to Predefined Position
 // The parameter values are absolute machine coordinates in the native machine units
-CWS.Interpreter.prototype.g28 = function (cmd) 
+CWS.Interpreter.prototype.g28 = function (cmd)
 	{
 	// body...
 	};
 // Go to Predefined Position
 // The parameter values are absolute machine coordinates in the native machine units
-CWS.Interpreter.prototype.g30 = function (cmd) 
+CWS.Interpreter.prototype.g30 = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.g40 = function (cmd) 
+CWS.Interpreter.prototype.g40 = function (cmd)
 	{
 	// body...
 	this.modal.cutter_comp=40;
 	};
 
-CWS.Interpreter.prototype.g41 = function (cmd) 
+CWS.Interpreter.prototype.g41 = function (cmd)
 	{
 	// body...
 	this.modal.cutter_comp=41;
 	};
 
-CWS.Interpreter.prototype.g42 = function (cmd) 
+CWS.Interpreter.prototype.g42 = function (cmd)
 	{
 	// body...
 	this.modal.cutter_comp=42;
 	};
 
-CWS.Interpreter.prototype.g43 = function (cmd) 
+CWS.Interpreter.prototype.g43 = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.g49 = function (cmd) 
+CWS.Interpreter.prototype.g49 = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.g53 = function (cmd) 
+CWS.Interpreter.prototype.g53 = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.g54 = function (cmd) 
+CWS.Interpreter.prototype.g54 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
@@ -575,7 +450,7 @@ CWS.Interpreter.prototype.g54 = function (cmd)
 	this.settings.coord_system=this.coordinateSystemTable[1];
 	};
 
-CWS.Interpreter.prototype.g55 = function (cmd) 
+CWS.Interpreter.prototype.g55 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
@@ -583,7 +458,7 @@ CWS.Interpreter.prototype.g55 = function (cmd)
 	this.settings.coord_system=this.coordinateSystemTable[2];
 	};
 
-CWS.Interpreter.prototype.g56 = function (cmd) 
+CWS.Interpreter.prototype.g56 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
@@ -591,7 +466,7 @@ CWS.Interpreter.prototype.g56 = function (cmd)
 	this.settings.coord_system=this.coordinateSystemTable[3];
 	};
 
-CWS.Interpreter.prototype.g57 = function (cmd) 
+CWS.Interpreter.prototype.g57 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
@@ -599,7 +474,7 @@ CWS.Interpreter.prototype.g57 = function (cmd)
 	this.settings.coord_system=this.coordinateSystemTable[4];
 	};
 
-CWS.Interpreter.prototype.g58 = function (cmd) 
+CWS.Interpreter.prototype.g58 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
@@ -607,7 +482,7 @@ CWS.Interpreter.prototype.g58 = function (cmd)
 	this.settings.coord_system=this.coordinateSystemTable[5];
 	};
 
-CWS.Interpreter.prototype.g59 = function (cmd) 
+CWS.Interpreter.prototype.g59 = function (cmd)
 	{
 	// body...
 	if (this.modal.cutter_comp!=40)
@@ -615,150 +490,150 @@ CWS.Interpreter.prototype.g59 = function (cmd)
 	this.settings.coord_system=this.coordinateSystemTable[6];
 	};
 
-CWS.Interpreter.prototype.g61 = function (cmd) 
+CWS.Interpreter.prototype.g61 = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.g64 = function (cmd) 
+CWS.Interpreter.prototype.g64 = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.g90 = function (cmd) 
+CWS.Interpreter.prototype.g90 = function (cmd)
 	{
 	// body...
 	this.modal.distance=90;
 	};
 
-CWS.Interpreter.prototype.g91 = function (cmd) 
+CWS.Interpreter.prototype.g91 = function (cmd)
 	{
 	this.modal.distance=91;
 	// body...
 	};
 
-CWS.Interpreter.prototype.g92 = function (cmd) 
+CWS.Interpreter.prototype.g92 = function (cmd)
 	{
 	for (var k in cmd.param.xyz)
 		this.settings.coord_offset[k]=cmd.param.xyz[k]*this.modal.units;
 	};
 
-CWS.Interpreter.prototype.g93 = function (cmd) 
+CWS.Interpreter.prototype.g93 = function (cmd)
 	{
 	// body...
 	this.modal.feed_rate_mode=93;
 	};
 
-CWS.Interpreter.prototype.g94 = function (cmd) 
+CWS.Interpreter.prototype.g94 = function (cmd)
 	{
 	// body...
 	this.modal.feed_rate_mode=94;
 	this.settings.feed_rate=null;
 	};
 
-CWS.Interpreter.prototype.g98 = function (cmd) 
+CWS.Interpreter.prototype.g98 = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.g99 = function (cmd) 
+CWS.Interpreter.prototype.g99 = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m0	= function (cmd) 
+CWS.Interpreter.prototype.m0	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m1	= function (cmd) 
+CWS.Interpreter.prototype.m1	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m2	= function (cmd) 
+CWS.Interpreter.prototype.m2	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m3	= function (cmd) 
+CWS.Interpreter.prototype.m3	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m4	= function (cmd) 
+CWS.Interpreter.prototype.m4	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m5	= function (cmd) 
+CWS.Interpreter.prototype.m5	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m6	= function (cmd) 
+CWS.Interpreter.prototype.m6	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m7	= function (cmd) 
+CWS.Interpreter.prototype.m7	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m8	= function (cmd) 
+CWS.Interpreter.prototype.m8	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m9	= function (cmd) 
+CWS.Interpreter.prototype.m9	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m30	= function (cmd) 
+CWS.Interpreter.prototype.m30	= function (cmd)
 	{
 	// body...
 	this.stopRunning = true;
 	};
 
-CWS.Interpreter.prototype.m48	= function (cmd) 
+CWS.Interpreter.prototype.m48	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m49	= function (cmd) 
+CWS.Interpreter.prototype.m49	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m60	= function (cmd) 
+CWS.Interpreter.prototype.m60	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m82	= function (cmd) 
+CWS.Interpreter.prototype.m82	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m83	= function (cmd) 
+CWS.Interpreter.prototype.m83	= function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m104 = function (cmd) 
+CWS.Interpreter.prototype.m104 = function (cmd)
 	{
 	// body...
 	};
 
-CWS.Interpreter.prototype.m109 = function (cmd) 
+CWS.Interpreter.prototype.m109 = function (cmd)
 	{
 	// body...
 	}
 
 // Creates an error object for the parser
-CWS.ErrorParser = function (line,message,data) 
+CWS.ErrorParser = function (line,message,data)
   {
     this.line = line;
     this.message = message;
