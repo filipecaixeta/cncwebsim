@@ -1,4 +1,5 @@
 # CNC Web Simulator
+
 [http://filipecaixeta.github.io/cncwebsim/](http://filipecaixeta.github.io/cncwebsim/)
 
 A CNC simulator for web browser. Written in javascript, css3, and html5. CNC web simulator is capable of generating tool path and also the final 3D workpiece for Lathe, Mill and 3D printer machines. The controller is based on the [Grbl](https://github.com/grbl/grbl). It runs on web browsers with support to [WebGL 1](http://webglreport.com/?v=1) and html5, which means you are able to run on desktop computer, tablets and smartphones without any installation.  
@@ -6,6 +7,7 @@ A CNC simulator for web browser. Written in javascript, css3, and html5. CNC web
 ![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img.jpg)
 
 ## Features
+
 - G-Code editor with syntax highlighting
 - Auto g-code evaluation 
 - Autosave
@@ -26,9 +28,19 @@ A CNC simulator for web browser. Written in javascript, css3, and html5. CNC web
   - Layer settings
 
 ## Usage
+
 Go to [http://filipecaixeta.github.io/cncwebsim/](http://filipecaixeta.github.io/cncwebsim/), choose a machine and your workpiece settings then you can start typing your g-code.
 
+## Development
+
+To serve the `index.html` site with python 3+ at port `8000` run:
+
+```bash
+python -m http.server 8000
+```
+
 ## Examples
+
 There are several g-code files in the [gcode](https://github.com/filipecaixeta/cncwebsim/tree/master/gcode) directory.
 
 ## Videos
@@ -47,8 +59,9 @@ There are several g-code files in the [gcode](https://github.com/filipecaixeta/c
 ![screenshot](https://raw.githubusercontent.com/filipecaixeta/cncwebsim/gh-pages/doc/img/img4.jpg)
 
 ## Problems?
+
 If you found a bug plese submit [here](https://github.com/filipecaixeta/cncwebsim/issues) or send me an email.
 
 ## Author
-Visit my personal website at [http://filipecaixeta.github.io/](http://filipecaixeta.github.io/).
 
+Visit my personal website at [http://filipecaixeta.github.io/](http://filipecaixeta.github.io/).

@@ -156,7 +156,7 @@ CWS.Controller.prototype.loadMachine = function()
                 machine: this.storage.machine,
                 material3D: this.material3D,
                 workpiece: this.storage.workpiece,
-                renderResolution: 4048});
+                renderResolution: 2048});
             this.renderer.lookAtMill({x:this.storage.workpiece.x,
                         y:this.storage.workpiece.y,z:this.storage.workpiece.z});
             this.renderer.addMesh("2DWorkpiece",this.machine.mesh2D);

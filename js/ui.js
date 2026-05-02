@@ -128,7 +128,9 @@ CWS.UI.prototype.resize = function()
 
 		this.elementTopMenu.innerWidth(width-editorWidth);
 		this.elementCanvasContainer.innerWidth(width-editorWidth);
-		this.controller.renderer.setSize(width-editorWidth,height);
+		var canvasWidth = this.elementCanvasContainer.innerWidth();
+		var canvasHeight = this.elementCanvasContainer.innerHeight();
+		this.controller.renderer.setSize(canvasWidth,canvasHeight);
 		this.elementBottomMenu.innerWidth(width-editorWidth);
 	};
 
